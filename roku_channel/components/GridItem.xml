@@ -11,7 +11,7 @@
     <Rectangle id="glow"
                translation="[-8,-8]"
                width="236"
-               height="410"
+               height="346"
                color="0xB48CFFFF"
                opacity="0.0"
                cornerRadius="18" />
