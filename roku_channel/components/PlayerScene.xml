@@ -46,18 +46,11 @@
     end sub
 
     sub onResize()
-        r = m.top.boundingRect()
-        if r = invalid then return
-
-        w = r.width : h = r.height
-        if w = invalid or h = invalid then return
-        if w <= 0 or h <= 0 then return
-
-        m.bg.translation = [0,0]
-        m.bg.width = w : m.bg.height = h
-
-        m.video.translation = [0,0]
-        m.video.width = w : m.video.height = h
+        ' Fixed dimensions for 1080p
+        m.bg.width = 1920
+        m.bg.height = 1080
+        m.video.width = 1920
+        m.video.height = 1080
     end sub
 
     sub onContentChanged()
