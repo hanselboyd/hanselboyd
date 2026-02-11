@@ -84,16 +84,13 @@
         end if
 
         m.dbg.visible = true
-        m.dbg.text = "PLAYER: loading\nURL: " + url + "\nFMT: " + fmt + "\nBack to exit"
+        m.dbg.text = "PLAYER: loading\nURL: " + url + "\nFMT: " + fmt + "\nPress BACK to exit"
 
         cn = CreateObject("roSGNode", "ContentNode")
         cn.url = url
         cn.title = safeStr(item.title)
         cn.streamFormat = fmt
-        cn.contentType = "movie"
-        cn.mimeType = "video/mp4"
 
-        m.video.control = "stop"
         m.video.content = cn
         m.video.control = "play"
         m.video.setFocus(true)
