@@ -8,7 +8,7 @@
 
   <children>
     <Rectangle id="bg" width="1920" height="1080" color="0x000000FF" />
-    <Video id="video" />
+    <Video id="video" width="1920" height="1080" translation="[0,0]" />
 
     <!-- Debug label (auto-hides on play) -->
     <Label id="dbg"
