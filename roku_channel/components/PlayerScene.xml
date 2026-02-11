@@ -7,7 +7,7 @@
   </interface>
 
   <children>
-    <Rectangle id="bg" color="0x000000FF" />
+    <Rectangle id="bg" width="1920" height="1080" color="0x000000FF" />
     <Video id="video" />
 
     <!-- Debug label (auto-hides on play) -->
