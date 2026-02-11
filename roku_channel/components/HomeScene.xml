@@ -45,16 +45,21 @@
       translation="[72, 170]"
       width="1776"
       height="850"
-      itemSize="[260, 390]"
+      itemSize="[1776, 420]"
       rowHeights="[420]"
-      rowItemSize="[260, 390]"
-      drawFocusFeedback="true"
+      rowItemSize="[[220, 330]]"
+      rowItemSpacing="[[20, 0]]"
+      numRows="2"
+      drawFocusFeedback="false"
       showRowLabel="true"
       rowLabelOffset="[24, 0]"
       rowLabelColor="0xFFFFFFFF"
       rowLabelFont="font:MediumBoldSystemFont"
       rowFocusAnimationStyle="floatingFocus"
       rowItemComponentName="GridItem" />
+
+    <!-- Detail Scene (hidden by default) -->
+    <DetailScene id="detailScene" visible="false" width="1920" height="1080" />
 
     <!-- FOOTER -->
     <Label
