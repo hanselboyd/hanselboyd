@@ -9,7 +9,7 @@
   <children>
     <!-- Focus glow -->
     <Rectangle id="glow"
-               translation="[-10,-10]"
+               translation="[-8,-8]"
                width="280"
                height="410"
                color="0xB48CFFFF"
