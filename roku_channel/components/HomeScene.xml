@@ -58,9 +58,6 @@
       rowFocusAnimationStyle="floatingFocus"
       rowItemComponentName="GridItem" />
 
-    <!-- Detail Scene (hidden by default) -->
-    <DetailScene id="detailScene" visible="false" width="1920" height="1080" />
-
     <!-- FOOTER -->
     <Label
       id="footer"
