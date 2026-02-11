@@ -10,9 +10,7 @@
     height="1080"
     uri="pkg:/images/bg.jpg"
     loadWidth="1920"
-    loadHeight="1080"
-    blendColor="0x000000FF"
-    blendFactor="0.25" />
+    loadHeight="1080" />
 
   <!-- DARK OVERLAY FOR READABILITY -->
   <Rectangle
