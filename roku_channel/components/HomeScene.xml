@@ -17,7 +17,8 @@
     id="overlay"
     width="1920"
     height="1080"
-    color="0x00000050" />
+    color="0x000000AA"
+    opacity="0.6" />
 
 
 
