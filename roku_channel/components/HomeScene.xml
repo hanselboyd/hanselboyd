@@ -148,16 +148,24 @@ itemNode.fhdPosterUrl = it.poster
     sub showDetail(item as Object)
       if item = invalid then return
       
-      m.detailScene = m.top.findNode("detailScene")
+      ' Create DetailScene dynamically
+      if m.detailScene <> invalid
+        m.top.removeChild(m.detailScene)
+      end if
+      
+      m.detailScene = CreateObject("roSGNode", "DetailScene")
       m.detailScene.content = item
-      m.detailScene.visible = true
+      m.top.appendChild(m.detailScene)
       m.detailScene.setFocus(true)
       
       m.detailScene.observeField("closeRequested", "onDetailClose")
     end sub
 
     sub onDetailClose()
-      m.detailScene.visible = false
+      if m.detailScene <> invalid
+        m.top.removeChild(m.detailScene)
+        m.detailScene = invalid
+      end if
       m.rowList.setFocus(true)
     end sub
 
