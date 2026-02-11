@@ -86,7 +86,7 @@
             m.poster.uri = p
         else
             ' Local package fallback (prevents blank tiles)
-            m.poster.uri = "pkg:/images/fd_poster_fallback.png"
+            m.poster.uri = "pkg:/images/imagesfd_poster_fallback.png"
         end if
     end sub
 
