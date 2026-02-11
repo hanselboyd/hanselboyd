@@ -29,19 +29,19 @@
         m.video = m.top.findNode("video")
         m.dbg = m.top.findNode("dbg")
 
-        m.top.observeField("boundingRect", "onResize")
-        onResize()
+        ' Enable HTTPS certificate for video playback
+        m.video.enableCookies()
+        m.video.setCertificatesFile("common:/certs/ca-bundle.crt")
 
         m.top.observeField("content", "onContentChanged")
         m.video.observeField("state", "onState")
         m.video.observeField("errorMsg", "onErr")
         m.video.observeField("errorCode", "onErr")
 
-        ' Ensure keys
-        m.top.setFocus(true)
+        ' Ensure keys work
         m.video.setFocus(true)
 
-        ' Default behavior: do not loop unless placeholder
+        ' Default behavior: do not loop
         m.video.repeat = false
     end sub
 
