@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="FeedTask" extends="Task">
+  <interface>
+    <field id="response" type="string" alwaysNotify="true" />
+    <field id="error" type="string" alwaysNotify="true" />
+  </interface>
+
+  <script type="text/brightscript"><![CDATA[
+    sub init()
+      m.top.functionName = "getFeed"
+    end sub
+
+    sub getFeed()
+      ' POINT THIS TO THE NEW FEED FILE
+      url =  "https://frontdoormedia.org/feeds/frontdoor_shelves_public_v1.json?v=20260210b"
+
+      port = CreateObject("roMessagePort")
+      xfer = CreateObject("roUrlTransfer")
+      xfer.SetMessagePort(port)
+      xfer.SetUrl(url)
+      xfer.AddHeader("User-Agent", "Roku/FrontDoor")
+      xfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+      xfer.InitClientCertificates()
+
+      ok = xfer.AsyncGetToString()
+      if ok <> true then
+        m.top.error = "Feed request could not start."
+        return
+      end if
+
+      msg = wait(15000, port)
+      if msg = invalid then
+        xfer.AsyncCancel()
+        m.top.error = "Feed timeout (15s)."
+        return
+      end if
+
+      if type(msg) = "roUrlEvent" then
+        code = msg.GetResponseCode()
+        body = msg.GetString()
+
+        if body = invalid or body = "" then
+          m.top.error = "Feed empty. HTTP " + code.toStr()
+          return
+        end if
+
+        firstChar = Left(body.Trim(), 1)
+        if firstChar <> "{" and firstChar <> "[" then
+          m.top.error = "Feed not JSON. HTTP " + code.toStr()
+          return
+        end if
+
+        m.top.response = body
+        return
+      end if
+
+      m.top.error = "Feed failed (unexpected response)."
+    end sub
+  ]]></script>
+</component>

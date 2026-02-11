@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="DetailScene" extends="Group">
+
+  <interface>
+    <field id="content" type="node" />
+    <field id="closeRequested" type="boolean" alwaysNotify="true" value="false" />
+  </interface>
+
+  <children>
+    <Rectangle id="bg" color="0x101010FF" />
+
+    <Poster id="poster" translation="[60,60]" width="360" height="540" />
+
+    <Label id="titleLbl"
+           translation="[460,70]"
+           width="740"
+           height="60"
+           font="font:LargeBoldSystemFont" />
+
+    <Label id="descLbl"
+           translation="[460,140]"
+           width="740"
+           height="380"
+           numLines="10"
+           font="font:MediumSystemFont" />
+
+    <Button id="playBtn" translation="[460,540]" text="Play" />
+    <Button id="backBtn" translation="[600,540]" text="Back" />
+  </children>
+
+  <script type="text/brightscript"><![CDATA[
+    sub init()
+        m.bg = m.top.findNode("bg")
+        m.poster = m.top.findNode("poster")
+        m.titleLbl = m.top.findNode("titleLbl")
+        m.descLbl = m.top.findNode("descLbl")
+        m.playBtn = m.top.findNode("playBtn")
+        m.backBtn = m.top.findNode("backBtn")
+
+        m.top.observeField("boundingRect", "onResize")
+        onResize()
+
+        m.playBtn.observeField("buttonSelected", "onPlay")
+        m.backBtn.observeField("buttonSelected", "onBack")
+
+        m.top.observeField("content", "onContentChanged")
+
+        ' Ensure remote works immediately
+        m.playBtn.setFocus(true)
+    end sub
+
+    sub onResize()
+        if m.top.width <= 0 or m.top.height <= 0 then return
+        m.bg.width = m.top.width
+        m.bg.height = m.top.height
+    end sub
+
+    sub onContentChanged()
+        item = m.top.content
+        if item = invalid then
+            m.titleLbl.text = "No item"
+            m.descLbl.text = ""
+            return
+        end if
+
+        ' Poster
+        if item.fhdPosterUrl <> invalid and item.fhdPosterUrl <> ""
+            m.poster.uri = item.fhdPosterUrl
+        else if item.hdPosterUrl <> invalid and item.hdPosterUrl <> ""
+            m.poster.uri = item.hdPosterUrl
+        else
+            m.poster.uri = "https://frontdoormedia.org/images/posters/fd_poster_01.jpg"
+        end if
+
+        ' Text
+        m.titleLbl.text = item.title
+        if item.description <> invalid and item.description <> ""
+            m.descLbl.text = item.description
+        else
+            m.descLbl.text = item.shortDescriptionLine1
+        end if
+
+        m.playBtn.setFocus(true)
+    end sub
+
+    sub onPlay()
+        item = m.top.content
+        if item = invalid or item.url = invalid or item.url = "" then
+            m.descLbl.text = "Missing video URL."
+            return
+        end if
+
+        player = CreateObject("roSGNode", "PlayerScene")
+        player.content = item
+
+        if m.playerScene <> invalid
+            m.top.removeChild(m.playerScene)
+        end if
+
+        m.playerScene = player
+        m.top.appendChild(m.playerScene)
+        m.playerScene.setFocus(true)
+
+        m.playerScene.observeField("closeRequested", "onPlayerClose")
+    end sub
+
+    sub onPlayerClose()
+        if m.playerScene <> invalid
+            m.top.removeChild(m.playerScene)
+            m.playerScene = invalid
+            m.playBtn.setFocus(true)
+        end if
+    end sub
+
+    sub onBack()
+        ' Toggle so observers fire every time
+        m.top.closeRequested = not m.top.closeRequested
+    end sub
+
+    function onKeyEvent(key as String, press as Boolean) as Boolean
+        if not press then return false
+
+        if key = "back"
+            onBack()
+            return true
+        end if
+
+        return false
+    end function
+  ]]></script>
+
+</component>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="GridItem" extends="Group">
+
+  <interface>
+    <field id="itemContent" type="node" />
+    <field id="isFocused" type="boolean" alwaysNotify="true" value="false" />
+  </interface>
+
+  <children>
+    <!-- Focus glow -->
+    <Rectangle id="glow"
+               translation="[-10,-10]"
+               width="280"
+               height="410"
+               color="0xB48CFFFF"
+               opacity="0.0"
+               cornerRadius="18" />
+
+    <!-- Poster (never crop) -->
+    <Poster id="poster"
+            translation="[0,0]"
+            width="260"
+            height="390"
+            scaleMode="scaleToFit"
+            loadWidth="520"
+            loadHeight="780" />
+
+    <!-- Focus-in animation -->
+    <Animation id="focusIn" duration="0.12" easeFunction="linear">
+      <Vector2DFieldInterpolator
+        key="[0.0, 1.0]"
+        keyValue="[[1.0,1.0],[1.04,1.04]]"
+        fieldToInterp="top.scale" />
+      <FloatFieldInterpolator
+        key="[0.0, 1.0]"
+        keyValue="[0.0, 0.22]"
+        fieldToInterp="glow.opacity" />
+    </Animation>
+
+    <!-- Focus-out animation -->
+    <Animation id="focusOut" duration="0.10" easeFunction="linear">
+      <Vector2DFieldInterpolator
+        key="[0.0, 1.0]"
+        keyValue="[[1.04,1.04],[1.0,1.0]]"
+        fieldToInterp="top.scale" />
+      <FloatFieldInterpolator
+        key="[0.0, 1.0]"
+        keyValue="[0.22, 0.0]"
+        fieldToInterp="glow.opacity" />
+    </Animation>
+  </children>
+
+  <script type="text/brightscript"><![CDATA[
+    sub init()
+        m.poster   = m.top.findNode("poster")
+        m.glow     = m.top.findNode("glow")
+        m.focusIn  = m.top.findNode("focusIn")
+        m.focusOut = m.top.findNode("focusOut")
+
+        m.top.observeField("itemContent", "onContentChanged")
+        m.top.observeField("isFocused", "onFocusChanged")
+
+        ' Start from a known visual state
+        m.top.scale = [1.0, 1.0]
+        m.glow.opacity = 0.0
+    end sub
+
+    function pickPosterUrl(c as Object) as String
+        if c = invalid then return ""
+
+        if c.fhdPosterUrl <> invalid and c.fhdPosterUrl <> "" then return c.fhdPosterUrl
+        if c.hdPosterUrl  <> invalid and c.hdPosterUrl  <> "" then return c.hdPosterUrl
+        if c.poster       <> invalid and c.poster       <> "" then return c.poster
+        if c.thumbnail    <> invalid and c.thumbnail    <> "" then return c.thumbnail
+        if c.sdPosterUrl  <> invalid and c.sdPosterUrl  <> "" then return c.sdPosterUrl
+
+        return ""
+    end function
+
+    sub onContentChanged()
+        c = m.top.itemContent
+        if c = invalid then return
+
+        p = pickPosterUrl(c)
+        if p <> "" then
+            m.poster.uri = p
+        else
+            ' Local package fallback (prevents blank tiles)
+            m.poster.uri = "pkg:/images/fd_poster_fallback.png"
+        end if
+    end sub
+
+    sub onFocusChanged()
+        if m.top.isFocused then
+            if m.focusOut <> invalid then m.focusOut.control = "stop"
+            if m.focusIn <> invalid then
+                m.focusIn.control = "start"
+            else
+                m.top.scale = [1.04, 1.04]
+                m.glow.opacity = 0.22
+            end if
+        else
+            if m.focusIn <> invalid then m.focusIn.control = "stop"
+            if m.focusOut <> invalid then
+                m.focusOut.control = "start"
+            else
+                m.top.scale = [1.0, 1.0]
+                m.glow.opacity = 0.0
+            end if
+        end if
+    end sub
+  ]]></script>
+
+</component>

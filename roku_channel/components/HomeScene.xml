@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="HomeScene" extends="Scene">
+
+  <children>
+
+  <!-- BACKGROUND IMAGE -->
+  <Poster
+    id="bg"
+    width="1920"
+    height="1080"
+    uri="pkg:/images/bg.jpg"
+    loadWidth="1920"
+    loadHeight="1080"
+    blendColor="0x000000FF"
+    blendFactor="0.25" />
+
+  <!-- DARK OVERLAY FOR READABILITY -->
+  <Rectangle
+    id="overlay"
+    width="1920"
+    height="1080"
+    color="0x00000050" />
+
+
+
+
+
+    <!-- HEADER -->
+    <Group id="header" translation="[96, 54]">
+      <Label
+        id="brand"
+        text="Front Door"
+        font="font:LargeBoldSystemFont"
+        color="0xFFFFFFFF" />
+      <Label
+        id="tagline"
+        translation="[0, 52]"
+        text="Short films. Finished."
+        font="font:MediumSystemFont"
+        color="0xCFCFCFFF" />
+    </Group>
+
+    <!-- SHELVES -->
+    <RowList
+      id="rowList"
+      translation="[72, 170]"
+      width="1776"
+      height="850"
+      itemSize="[260, 390]"
+      rowHeights="[420]"
+      rowItemSize="[260, 390]"
+      drawFocusFeedback="true"
+      showRowLabel="true"
+      rowLabelOffset="[24, 0]"
+      rowLabelColor="0xFFFFFFFF"
+      rowLabelFont="font:MediumBoldSystemFont"
+      rowFocusAnimationStyle="floatingFocus"
+      rowItemComponentName="GridItem" />
+
+    <!-- FOOTER -->
+    <Label
+      id="footer"
+      translation="[96, 1020]"
+      text="Programming rotates."
+      font="font:SmallSystemFont"
+      color="0xAFAFAFFF" />
+
+    <!-- FEED TASK (loads JSON) -->
+    <FeedTask id="feedTask" />
+
+  </children>
+
+  <script type="text/brightscript"><![CDATA[
+    sub init()
+      m.rowList  = m.top.findNode("rowList")
+      m.feedTask = m.top.findNode("feedTask")
+
+      ' Focus shelves
+      m.rowList.setFocus(true)
+
+      ' Watch feed results
+      m.feedTask.observeField("response", "onFeedResponse")
+      m.feedTask.observeField("error", "onFeedError")
+
+      ' Start feed load
+      m.feedTask.control = "RUN"
+    end sub
+
+    sub onFeedError()
+      err = m.feedTask.error
+      if err <> invalid and err <> "" then
+        print "FEED ERROR: "; err
+      end if
+    end sub
+
+    sub onFeedResponse()
+      jsonStr = m.feedTask.response
+      if jsonStr = invalid or jsonStr = "" then return
+
+      data = ParseJson(jsonStr)
+      if data = invalid then
+        print "FEED ERROR: JSON parse failed"
+        return
+      end if
+
+      contentRoot = CreateObject("roSGNode", "ContentNode")
+
+      if data.categories <> invalid
+        for each cat in data.categories
+          rowNode = CreateObject("roSGNode", "ContentNode")
+          rowNode.title = cat.title
+
+          if cat.items <> invalid
+            for each it in cat.items
+              itemNode = CreateObject("roSGNode", "ContentNode")
+
+              ' Common fields Roku UI components tend to use
+              itemNode.title = it.title
+              itemNode.shortDescriptionLine1 = it.shortDescription
+              itemNode.description = it.description
+
+              ' Posters
+             itemNode.hdPosterUrl = it.poster
+itemNode.sdPosterUrl = it.poster
+itemNode.poster = it.poster
+itemNode.thumbnail = it.poster
+itemNode.fhdPosterUrl = it.poster
+
+
+              ' Playback fields (used by many PlayerScene patterns)
+              itemNode.url = it.videoUrl
+              itemNode.streamFormat = it.videoType
+
+              if it.duration <> invalid then itemNode.length = it.duration
+
+              rowNode.appendChild(itemNode)
+            end for
+          end if
+
+          contentRoot.appendChild(rowNode)
+        end for
+      end if
+
+      m.rowList.content = contentRoot
+    end sub
+  ]]></script>
+
+</component>

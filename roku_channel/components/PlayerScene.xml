@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PlayerScene" extends="Group">
+
+  <interface>
+    <field id="content" type="node" />
+    <field id="closeRequested" type="boolean" alwaysNotify="true" value="false" />
+  </interface>
+
+  <children>
+    <Rectangle id="bg" color="0x000000FF" />
+    <Video id="video" />
+
+    <!-- Debug label (auto-hides on play) -->
+    <Label id="dbg"
+           translation="[80,80]"
+           width="1760"
+           height="240"
+           numLines="6"
+           font="font:LargeBoldSystemFont"
+           color="0xFFFFFFFF"
+           text="PLAYER: init" />
+  </children>
+
+  <script type="text/brightscript"><![CDATA[
+    sub init()
+        print "PLAYER INIT"
+
+        m.bg = m.top.findNode("bg")
+        m.video = m.top.findNode("video")
+        m.dbg = m.top.findNode("dbg")
+
+        m.top.observeField("boundingRect", "onResize")
+        onResize()
+
+        m.top.observeField("content", "onContentChanged")
+        m.video.observeField("state", "onState")
+        m.video.observeField("errorMsg", "onErr")
+        m.video.observeField("errorCode", "onErr")
+
+        ' Ensure keys
+        m.top.setFocus(true)
+        m.video.setFocus(true)
+
+        ' Default behavior: do not loop unless placeholder
+        m.video.repeat = false
+    end sub
+
+    sub onResize()
+        r = m.top.boundingRect()
+        if r = invalid then return
+
+        w = r.width : h = r.height
+        if w = invalid or h = invalid then return
+        if w <= 0 or h <= 0 then return
+
+        m.bg.translation = [0,0]
+        m.bg.width = w : m.bg.height = h
+
+        m.video.translation = [0,0]
+        m.video.width = w : m.video.height = h
+    end sub
+
+    sub onContentChanged()
+        item = m.top.content
+        if item = invalid then
+            m.dbg.visible = true
+            m.dbg.text = "PLAYER: no content"
+            return
+        end if
+
+        url = safeStr(item.url).trim()
+        fmt = safeStr(item.streamFormat).trim()
+        if fmt = "" then fmt = "mp4"
+
+        ' Loop placeholders so playback never feels broken
+        isPlaceholder = false
+        if item.id <> invalid then
+            if LCase(item.id).instr("placeholder") >= 0 then isPlaceholder = true
+        end if
+
+        if isPlaceholder = true then
+            m.video.repeat = true
+        else
+            m.video.repeat = false
+        end if
+
+        if url = "" then
+            m.dbg.visible = true
+            m.dbg.text = "PLAYER: missing URL"
+            return
+        end if
+
+        m.dbg.visible = true
+        m.dbg.text = "PLAYER: loading\nURL: " + url + "\nFMT: " + fmt + "\nBack to exit"
+
+        cn = CreateObject("roSGNode", "ContentNode")
+        cn.url = url
+        cn.title = safeStr(item.title)
+        cn.streamFormat = fmt
+        cn.contentType = "movie"
+        cn.mimeType = "video/mp4"
+
+        m.video.control = "stop"
+        m.video.content = cn
+        m.video.control = "play"
+        m.video.setFocus(true)
+    end sub
+
+    sub onState()
+        st = m.video.state
+        print "VIDEO STATE=" + st
+
+        if st = "playing" then
+            m.dbg.visible = false
+        else
+            m.dbg.visible = true
+            m.dbg.text = "PLAYER: " + st + "\nBack to exit"
+        end if
+
+        ' IMPORTANT: do NOT auto-close on finished
+        ' (auto-close causes the half-second flash behavior)
+    end sub
+
+    sub onErr()
+        msg = m.video.errorMsg
+        code = m.video.errorCode
+        if msg = invalid or msg = "" then msg = "Playback error"
+
+        m.dbg.visible = true
+        m.dbg.text = "PLAYER: ERROR\nCode: " + code.toStr() + "\n" + msg + "\nBack to exit"
+        print "VIDEO ERROR code="; code; " msg="; msg
+    end sub
+
+    sub requestClose()
+        m.top.closeRequested = not m.top.closeRequested
+    end sub
+
+    function onKeyEvent(key as String, press as Boolean) as Boolean
+        if not press then return false
+
+        if key = "back" then
+            m.video.control = "stop"
+            requestClose()
+            return true
+        end if
+
+        return false
+    end function
+
+    function safeStr(v as dynamic) as string
+        if v = invalid then return ""
+        return v.toStr()
+    end function
+  ]]></script>
+
+</component>

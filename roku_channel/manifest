@@ -1,0 +1,30 @@
+title=Front Door Dev
+major_version=1
+minor_version=0
+build_version=00042
+
+ui_resolutions=hd,fhd
+
+# Channel tile icons (required)
+mm_icon_focus_hd=pkg:/images/channel_icon_290x218.png
+mm_icon_focus_fhd=pkg:/images/channel_icon_540x405.png
+
+# Optional side icons (safe to include; helps some devices/UX)
+mm_icon_side_hd=pkg:/images/channel_icon_290x218.png
+mm_icon_side_sd=pkg:/images/channel_icon_290x218.png
+
+supports_input_launch=1
+
+main=pkg:/source/main.brs
+
+
+
+
+
+
+
+
+
+
+
+
