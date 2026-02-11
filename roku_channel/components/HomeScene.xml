@@ -147,6 +147,45 @@ itemNode.fhdPosterUrl = it.poster
 
       m.rowList.content = contentRoot
     end sub
+
+    sub showDetail(item as Object)
+      if item = invalid then return
+      
+      m.detailScene = m.top.findNode("detailScene")
+      m.detailScene.content = item
+      m.detailScene.visible = true
+      m.detailScene.setFocus(true)
+      
+      m.detailScene.observeField("closeRequested", "onDetailClose")
+    end sub
+
+    sub onDetailClose()
+      m.detailScene.visible = false
+      m.rowList.setFocus(true)
+    end sub
+
+    function onKeyEvent(key as String, press as Boolean) as Boolean
+      if not press then return false
+
+      if key = "OK"
+        ' Get currently focused item
+        rowIndex = m.rowList.rowItemFocused[0]
+        colIndex = m.rowList.rowItemFocused[1]
+        
+        if m.rowList.content <> invalid
+          rowContent = m.rowList.content.getChild(rowIndex)
+          if rowContent <> invalid
+            itemContent = rowContent.getChild(colIndex)
+            if itemContent <> invalid
+              showDetail(itemContent)
+              return true
+            end if
+          end if
+        end if
+      end if
+
+      return false
+    end function
   ]]></script>
 
 </component>
