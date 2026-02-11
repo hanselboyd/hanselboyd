@@ -14,7 +14,7 @@
                height="346"
                color="0xB48CFFFF"
                opacity="0.0"
-               cornerRadius="18" />
+               cornerRadius="12" />
 
     <!-- Poster (never crop) -->
     <Poster id="poster"
