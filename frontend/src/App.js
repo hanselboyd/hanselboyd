@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
+import FilmmakerPortal from './FilmmakerPortal';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
