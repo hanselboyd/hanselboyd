@@ -421,7 +421,7 @@ def save_roku_feed(feed: dict):
     return feed_path
 
 async def send_qa_email(submission: dict, qa_report: dict):
-    """Send QA report email to filmmaker"""
+    """Send QA report email to filmmaker with portal link"""
     try:
         from sendgrid import SendGridAPIClient
         from sendgrid.helpers.mail import Mail
@@ -431,55 +431,188 @@ async def send_qa_email(submission: dict, qa_report: dict):
             print("SendGrid API key not configured")
             return False
         
+        filmmaker_email = submission.get('filmmaker_email', '')
+        submission_id = str(submission.get('_id', ''))
+        portal_url = f"https://frontdoormedia.org/portal?email={filmmaker_email}"
+        
         status = "✅ PASSED" if qa_report.get("overall_passed") else "❌ NEEDS ATTENTION"
+        status_color = "#22c55e" if qa_report.get("overall_passed") else "#ef4444"
+        
         issues_html = ""
         if qa_report.get("issues"):
-            issues_html = "<ul>" + "".join(f"<li>{issue}</li>" for issue in qa_report["issues"]) + "</ul>"
+            issues_html = "<ul style='color: #666;'>" + "".join(f"<li>{issue}</li>" for issue in qa_report["issues"][:5]) + "</ul>"
+        
+        recommendations_html = ""
+        if qa_report.get("recommendations"):
+            recommendations_html = "<ul style='color: #666;'>" + "".join(f"<li>{rec}</li>" for rec in qa_report["recommendations"][:5]) + "</ul>"
         
         html_content = f"""
+        <!DOCTYPE html>
         <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Front Door Media - QA Report</h1>
-            <h2>Film: {submission.get('title')}</h2>
-            <p><strong>Status:</strong> {status}</p>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">Front Door Media</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">QA Report</p>
+            </div>
             
-            <h3>Technical Checks:</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr><td>Video Accessible:</td><td>{"✅" if qa_report.get("technical_checks", {}).get("video_accessible") else "❌"}</td></tr>
-                <tr><td>Codec Valid:</td><td>{"✅" if qa_report.get("technical_checks", {}).get("codec_valid") else "❌"}</td></tr>
-                <tr><td>Resolution OK:</td><td>{"✅" if qa_report.get("technical_checks", {}).get("resolution_acceptable") else "❌"}</td></tr>
-                <tr><td>Audio Present:</td><td>{"✅" if qa_report.get("technical_checks", {}).get("audio_present") else "❌"}</td></tr>
-            </table>
+            <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h2 style="color: #1f2937; margin-top: 0;">{submission.get('title')}</h2>
+                
+                <div style="background-color: {status_color}20; border-left: 4px solid {status_color}; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                    <p style="margin: 0; color: {status_color}; font-weight: 600; font-size: 18px;">{status}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;">{"Your submission passed technical QA and is being reviewed." if qa_report.get("overall_passed") else "Some issues were found. Please review the details below."}</p>
+                </div>
+                
+                <h3 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Technical Checks</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px 0; color: #666;">Video Accessible</td>
+                        <td style="padding: 12px 0; text-align: right;">{"✅" if qa_report.get("technical_checks", {}).get("video_accessible") else "❌"}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px 0; color: #666;">Codec Valid (H.264/H.265)</td>
+                        <td style="padding: 12px 0; text-align: right;">{"✅" if qa_report.get("technical_checks", {}).get("codec_valid") else "❌"}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px 0; color: #666;">Resolution Acceptable</td>
+                        <td style="padding: 12px 0; text-align: right;">{"✅" if qa_report.get("technical_checks", {}).get("resolution_acceptable") else "❌"} <span style="color: #999; font-size: 12px;">{qa_report.get("technical_checks", {}).get("details", {}).get("resolution", "")}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; color: #666;">Audio Track Present</td>
+                        <td style="padding: 12px 0; text-align: right;">{"✅" if qa_report.get("technical_checks", {}).get("audio_present") else "❌"}</td>
+                    </tr>
+                </table>
+                
+                {"<h3 style='color: #dc2626; border-bottom: 2px solid #fecaca; padding-bottom: 10px;'>Issues Found</h3>" + issues_html if issues_html else ""}
+                
+                {"<h3 style='color: #2563eb; border-bottom: 2px solid #bfdbfe; padding-bottom: 10px;'>Recommendations</h3>" + recommendations_html if recommendations_html else ""}
+                
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 20px; border-radius: 8px; text-align: center; margin-top: 30px;">
+                    <p style="color: white; margin: 0 0 15px 0; font-size: 16px;">Track your submission status anytime</p>
+                    <a href="{portal_url}" style="display: inline-block; background: white; color: #8b5cf6; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">View in Filmmaker Portal →</a>
+                </div>
+            </div>
             
-            {"<h3>Issues Found:</h3>" + issues_html if issues_html else ""}
-            
-            <h3>Recommendations:</h3>
-            <ul>
-                {"".join(f"<li>{rec}</li>" for rec in qa_report.get("recommendations", ["No specific recommendations"]))}
-            </ul>
-            
-            <hr>
-            <p style="color: #666; font-size: 12px;">
-                This is an automated message from Front Door Media.<br>
-                Questions? Reply to this email or visit frontdoormedia.org
-            </p>
+            <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
+                <p>© 2026 Front Door Media. All rights reserved.</p>
+                <p>Questions? Reply to this email or contact <a href="mailto:support@frontdoormedia.org" style="color: #8b5cf6;">support@frontdoormedia.org</a></p>
+            </div>
         </body>
         </html>
         """
         
         message = Mail(
             from_email=os.environ.get("SENDER_EMAIL", "noreply@frontdoormedia.org"),
-            to_emails=submission.get("filmmaker_email"),
+            to_emails=filmmaker_email,
             subject=f"Front Door QA Report: {submission.get('title')} - {status}",
             html_content=html_content
         )
         
         sg = SendGridAPIClient(api_key)
         response = sg.send(message)
+        print(f"QA email sent to {filmmaker_email}: {response.status_code}")
         return response.status_code == 202
         
     except Exception as e:
         print(f"Email error: {e}")
+        return False
+
+async def send_status_update_email(submission: dict, new_status: str, details: dict = None):
+    """Send status update email to filmmaker"""
+    try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+        
+        api_key = os.environ.get("SENDGRID_API_KEY")
+        if not api_key:
+            return False
+        
+        filmmaker_email = submission.get('filmmaker_email', '')
+        portal_url = f"https://frontdoormedia.org/portal?email={filmmaker_email}"
+        
+        status_config = {
+            "published": {
+                "emoji": "🎉",
+                "title": "Congratulations! Your Film is Live!",
+                "color": "#059669",
+                "message": f"Your film has been published to the '{details.get('shelf', 'Front Door')}' shelf and is now available to viewers and buyers on Roku."
+            },
+            "classified": {
+                "emoji": "📋",
+                "title": "Your Film is Under Review",
+                "color": "#8b5cf6",
+                "message": f"Your film passed QA and has been classified for the '{details.get('shelf', '')}' shelf. Our editorial team will review it shortly."
+            },
+            "rejected": {
+                "emoji": "📝",
+                "title": "Submission Update",
+                "color": "#6b7280",
+                "message": f"Unfortunately, your film was not selected for publication at this time. Reason: {details.get('reason', 'Not meeting current programming needs.')}"
+            }
+        }
+        
+        config = status_config.get(new_status, {
+            "emoji": "📬",
+            "title": "Submission Status Update",
+            "color": "#3b82f6",
+            "message": f"Your submission status has been updated to: {new_status}"
+        })
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">Front Door Media</h1>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="font-size: 48px;">{config['emoji']}</span>
+                </div>
+                
+                <h2 style="color: #1f2937; text-align: center; margin-top: 0;">{config['title']}</h2>
+                
+                <div style="background-color: {config['color']}15; border-left: 4px solid {config['color']}; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                    <p style="margin: 0; color: #374151; font-weight: 600;">Film: {submission.get('title')}</p>
+                    <p style="margin: 10px 0 0 0; color: #666;">{config['message']}</p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 20px; border-radius: 8px; text-align: center; margin-top: 30px;">
+                    <p style="color: white; margin: 0 0 15px 0; font-size: 16px;">View full details in your portal</p>
+                    <a href="{portal_url}" style="display: inline-block; background: white; color: #8b5cf6; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">Filmmaker Portal →</a>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
+                <p>© 2026 Front Door Media. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        message = Mail(
+            from_email=os.environ.get("SENDER_EMAIL", "noreply@frontdoormedia.org"),
+            to_emails=filmmaker_email,
+            subject=f"Front Door: {config['title']} - {submission.get('title')}",
+            html_content=html_content
+        )
+        
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
+        print(f"Status update email sent to {filmmaker_email}: {response.status_code}")
+        return response.status_code == 202
+        
+    except Exception as e:
+        print(f"Status email error: {e}")
         return False
 
 # ==================== API ENDPOINTS ====================
