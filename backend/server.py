@@ -101,31 +101,58 @@ def serialize_doc(doc: dict) -> dict:
     return doc
 
 async def run_ffprobe(video_url: str) -> Dict[str, Any]:
-    """Run ffprobe to get video metadata - handles HTTPS URLs"""
+    """Run ffprobe to get video metadata - handles HTTPS URLs with download fallback"""
+    import tempfile
+    import urllib.request
+    
     try:
-        # For HTTPS URLs, use ffprobe with proper headers
+        # First try direct ffprobe with user-agent
         cmd = [
             "ffprobe", "-v", "quiet", "-print_format", "json",
             "-show_format", "-show_streams",
-            "-headers", "User-Agent: Mozilla/5.0",
+            "-user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             video_url
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        if result.returncode == 0 and result.stdout.strip():
-            return json.loads(result.stdout)
+        if result.returncode == 0 and result.stdout.strip() and result.stdout.strip() != "{\n\n}":
+            data = json.loads(result.stdout)
+            if data.get("streams"):
+                return data
         
-        # If that fails, try with protocol_whitelist
-        cmd_alt = [
-            "ffprobe", "-v", "quiet", "-print_format", "json",
-            "-show_format", "-show_streams",
-            "-protocol_whitelist", "file,http,https,tcp,tls",
+        # Fallback: download a portion of the file and analyze
+        print(f"Direct ffprobe failed, trying download method for {video_url}")
+        
+        # Use curl to download first 5MB of the video
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        curl_cmd = [
+            "curl", "-s", "-L", "-o", tmp_path,
+            "-r", "0-5242880",  # First 5MB
+            "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             video_url
         ]
-        result_alt = subprocess.run(cmd_alt, capture_output=True, text=True, timeout=120)
-        if result_alt.returncode == 0 and result_alt.stdout.strip():
-            return json.loads(result_alt.stdout)
+        curl_result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=60)
+        
+        if curl_result.returncode == 0:
+            # Analyze the downloaded portion
+            probe_cmd = [
+                "ffprobe", "-v", "quiet", "-print_format", "json",
+                "-show_format", "-show_streams", tmp_path
+            ]
+            probe_result = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=30)
             
-        return {"error": result.stderr or result_alt.stderr or "ffprobe failed"}
+            # Clean up
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            
+            if probe_result.returncode == 0 and probe_result.stdout.strip():
+                return json.loads(probe_result.stdout)
+        
+        return {"error": "Could not analyze video"}
+        
     except subprocess.TimeoutExpired:
         return {"error": "ffprobe timeout"}
     except Exception as e:
