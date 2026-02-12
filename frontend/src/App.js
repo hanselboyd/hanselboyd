@@ -401,6 +401,8 @@ const NewSubmissionForm = ({ onSubmit, onClose }) => {
 
 // Main App Component
 function App() {
+  // Check URL for portal mode
+  const [isPortal, setIsPortal] = useState(window.location.pathname === '/portal' || window.location.hash === '#portal');
   const [stats, setStats] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
