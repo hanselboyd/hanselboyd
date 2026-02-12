@@ -1,6 +1,6 @@
 {
   "providerName": "Front Door",
-  "lastUpdated": "2026-02-12T03:46:00.632622+00:00",
+  "lastUpdated": "2026-02-12T03:49:52.549595+00:00",
   "language": "en-US",
   "categories": [
     {
@@ -19,6 +19,14 @@
     {
       "title": "Buyer: Festival Winners & Official Selections",
       "items": [
+        {
+          "title": "Test Film 034734",
+          "shortDescription": "A test film for API testing",
+          "description": "This is a comprehensive test film created by the automated testing system to verify the submission pipeline works correctly.",
+          "poster": "https://via.placeholder.com/400x600/333/fff?text=Test+Poster",
+          "videoUrl": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+          "videoType": "mp4"
+        },
         {
           "title": "Unmasking the Golden State Killer",
           "shortDescription": "Concept Cinema",
