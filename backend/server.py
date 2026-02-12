@@ -293,12 +293,14 @@ Analyze for content compliance and distribution readiness."""
 async def classify_submission(submission: dict, qa_report: dict) -> ClassificationResult:
     """Classify submission into appropriate shelf category using AI"""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        from openai import OpenAI
         
-        chat = LlmChat(
+        client = OpenAI(
             api_key=os.environ.get("EMERGENT_LLM_KEY"),
-            session_id=f"classify-{submission.get('_id', 'new')}",
-            system_message="""You are a film curator for Front Door Media. Classify films into shelves:
+            base_url="https://ai.emergentmethods.ai/v1"
+        )
+        
+        system_message = """You are a film curator for Front Door Media. Classify films into shelves:
 
 1. "Buyer: Acquisition Ready" - High-quality, market-ready films for distributors
 2. "Buyer: Festival Winners & Official Selections" - Award-winning or festival-selected films  
@@ -307,8 +309,7 @@ async def classify_submission(submission: dict, qa_report: dict) -> Classificati
 5. "Filmmaker: Getting Started" - Educational/tutorial content for filmmakers
 6. "Filmmaker: Spotlight – Emerging Creators" - Promising emerging talent
 
-Respond in JSON: {"shelf": "exact shelf name", "confidence": 0.0-1.0, "reasoning": "brief explanation"}"""
-        ).with_model("openai", "gpt-4o")
+Respond ONLY with valid JSON (no markdown): {"shelf": "exact shelf name", "confidence": 0.85, "reasoning": "brief explanation"}"""
         
         prompt = f"""Classify this film submission:
 
@@ -321,12 +322,20 @@ Technical Quality: {"Passed" if qa_report.get('overall_passed') else "Issues fou
 
 Which shelf should this film be placed on?"""
 
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
+        )
+        
+        result_text = response.choices[0].message.content
         
         # Parse JSON response
         try:
-            json_match = re.search(r'\{[\s\S]*\}', response)
+            json_match = re.search(r'\{[\s\S]*\}', result_text)
             if json_match:
                 result = json.loads(json_match.group())
                 return ClassificationResult(
