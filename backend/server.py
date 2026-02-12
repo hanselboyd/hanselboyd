@@ -692,7 +692,7 @@ async def process_submission_qa(submission_id: str):
         # Run AI compliance check
         ai_compliance = await run_ai_compliance_check(submission)
         
-        # Determine overall pass/fail
+        # Determine overall pass/fail - Technical checks are critical, AI is advisory
         technical_passed = all([
             technical_checks.get("video_accessible"),
             technical_checks.get("codec_valid"),
@@ -700,8 +700,9 @@ async def process_submission_qa(submission_id: str):
             technical_checks.get("audio_present")
         ])
         
+        # AI compliance is advisory - we still pass if technical checks pass
         ai_passed = ai_compliance.get("overall_passed", True)
-        overall_passed = technical_passed and ai_passed
+        overall_passed = technical_passed  # Only technical checks are blocking
         
         # Collect issues
         issues = []
