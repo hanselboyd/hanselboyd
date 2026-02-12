@@ -84,3 +84,22 @@ Build a software according to this flow: Upload → AI/QA compliance → classif
 2. Implement monthly report cron job
 3. Integrate with WordPress forms for auto-submission
 4. Test Roku channel with live feed endpoint
+
+## Update: Feb 12, 2026 - Filmmaker Portal Added
+
+### New Features
+- **Filmmaker Self-Service Portal** (`/portal` or `#portal`)
+  - Email-based submission lookup
+  - View submission status and progress
+  - Detailed QA reports with technical checks
+  - Issues and recommendations display
+  - FAQ section for common questions
+  - Mobile-responsive design
+
+### New API Endpoints
+- GET /api/portal/lookup?email={email} - Look up submissions by filmmaker email
+- GET /api/portal/submission/{id}?email={email} - Get detailed submission with email verification
+
+### SendGrid Integration
+- API key configured
+- Email notifications enabled for QA reports
