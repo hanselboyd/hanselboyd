@@ -571,6 +571,13 @@ function App() {
           </div>
           <div className="flex gap-3">
             <button
+              onClick={() => { setIsPortal(true); window.history.pushState({}, '', '/portal'); }}
+              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors"
+              data-testid="portal-link-btn"
+            >
+              Filmmaker Portal
+            </button>
+            <button
               onClick={handleRegenerateFeed}
               className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors"
               data-testid="regenerate-feed-btn"
