@@ -675,7 +675,7 @@ async def reprocess_submission(submission_id: str, background_tasks: BackgroundT
     return {"message": "QA reprocessing started"}
 
 @app.post("/api/submissions/{submission_id}/publish")
-async def publish_submission(submission_id: str, shelf: Optional[str] = None):
+async def publish_submission(submission_id: str, shelf: Optional[str] = None, background_tasks: BackgroundTasks = None):
     """Publish a submission to a shelf"""
     submission = submissions_collection.find_one({"_id": ObjectId(submission_id)})
     if not submission:
@@ -697,10 +697,14 @@ async def publish_submission(submission_id: str, shelf: Optional[str] = None):
     feed = generate_roku_feed()
     feed_path = save_roku_feed(feed)
     
+    # Send congratulations email
+    if background_tasks:
+        background_tasks.add_task(send_status_update_email, submission, "published", {"shelf": assigned_shelf})
+    
     return {"message": "Published successfully", "shelf": assigned_shelf, "feed_updated": True}
 
 @app.post("/api/submissions/{submission_id}/reject")
-async def reject_submission(submission_id: str, reason: str = "Not meeting quality standards"):
+async def reject_submission(submission_id: str, reason: str = "Not meeting quality standards", background_tasks: BackgroundTasks = None):
     """Reject a submission"""
     submission = submissions_collection.find_one({"_id": ObjectId(submission_id)})
     if not submission:
@@ -714,6 +718,10 @@ async def reject_submission(submission_id: str, reason: str = "Not meeting quali
             "updated_at": datetime.now(timezone.utc)
         }}
     )
+    
+    # Send rejection notification email
+    if background_tasks:
+        background_tasks.add_task(send_status_update_email, submission, "rejected", {"reason": reason})
     
     return {"message": "Submission rejected", "reason": reason}
 
