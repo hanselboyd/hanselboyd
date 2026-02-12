@@ -169,10 +169,10 @@ async def run_technical_qa(video_url: str) -> Dict[str, Any]:
         checks["codec_valid"] = codec in ["h264", "hevc", "h265", "avc"]
         checks["details"]["codec"] = codec
         
-        # Resolution check (min 720p, prefer 1080p)
+        # Resolution check (min 480p for promos, prefer 720p+)
         width = int(video_stream.get("width", 0))
         height = int(video_stream.get("height", 0))
-        checks["resolution_acceptable"] = width >= 1280 and height >= 720
+        checks["resolution_acceptable"] = width >= 640 and height >= 480
         checks["details"]["resolution"] = f"{width}x{height}"
         
         # Bitrate check
