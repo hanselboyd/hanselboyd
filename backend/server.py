@@ -584,6 +584,76 @@ async def reject_submission(submission_id: str, reason: str = "Not meeting quali
     
     return {"message": "Submission rejected", "reason": reason}
 
+# --- Filmmaker Portal Endpoints ---
+
+@app.get("/api/portal/lookup")
+async def filmmaker_lookup(email: str = Query(..., description="Filmmaker email address")):
+    """Look up submissions by filmmaker email - public endpoint for self-service portal"""
+    submissions = list(submissions_collection.find(
+        {"filmmaker_email": email.lower().strip()}
+    ).sort("created_at", -1))
+    
+    results = []
+    for sub in submissions:
+        # Get QA report if exists
+        qa_report = qa_reports_collection.find_one({"submission_id": str(sub["_id"])})
+        
+        result = {
+            "id": str(sub["_id"]),
+            "title": sub.get("title"),
+            "status": sub.get("status"),
+            "created_at": sub.get("created_at").isoformat() if sub.get("created_at") else None,
+            "updated_at": sub.get("updated_at").isoformat() if sub.get("updated_at") else None,
+            "poster_url": sub.get("poster_url"),
+            "recommended_shelf": sub.get("recommended_shelf"),
+            "assigned_shelf": sub.get("assigned_shelf"),
+            "classification_confidence": sub.get("classification_confidence"),
+            "rejection_reason": sub.get("rejection_reason"),
+            "qa_summary": None
+        }
+        
+        if qa_report:
+            result["qa_summary"] = {
+                "overall_passed": qa_report.get("overall_passed"),
+                "technical_checks": {
+                    "video_accessible": qa_report.get("technical_checks", {}).get("video_accessible"),
+                    "codec_valid": qa_report.get("technical_checks", {}).get("codec_valid"),
+                    "resolution_acceptable": qa_report.get("technical_checks", {}).get("resolution_acceptable"),
+                    "audio_present": qa_report.get("technical_checks", {}).get("audio_present"),
+                    "resolution": qa_report.get("technical_checks", {}).get("details", {}).get("resolution"),
+                    "duration_minutes": qa_report.get("technical_checks", {}).get("details", {}).get("duration_minutes")
+                },
+                "issues": qa_report.get("issues", []),
+                "recommendations": qa_report.get("recommendations", [])
+            }
+        
+        results.append(result)
+    
+    return {"submissions": results, "count": len(results)}
+
+@app.get("/api/portal/submission/{submission_id}")
+async def get_portal_submission(submission_id: str, email: str = Query(...)):
+    """Get detailed submission info - requires email verification"""
+    try:
+        submission = submissions_collection.find_one({"_id": ObjectId(submission_id)})
+    except:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    
+    # Verify email matches
+    if submission.get("filmmaker_email", "").lower() != email.lower().strip():
+        raise HTTPException(status_code=403, detail="Email does not match submission")
+    
+    qa_report = qa_reports_collection.find_one({"submission_id": submission_id})
+    
+    result = serialize_doc(submission)
+    if qa_report:
+        result["qa_report"] = serialize_doc(qa_report)
+    
+    return result
+
 # --- QA Report Endpoints ---
 
 @app.get("/api/qa-reports/{submission_id}")
