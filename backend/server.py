@@ -221,32 +221,26 @@ async def run_technical_qa(video_url: str) -> Dict[str, Any]:
     return checks
 
 async def run_ai_compliance_check(submission: dict) -> Dict[str, Any]:
-    """Run AI-powered content compliance checks"""
+    """Run AI-powered content compliance checks using OpenAI"""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        from openai import OpenAI
         
-        chat = LlmChat(
+        client = OpenAI(
             api_key=os.environ.get("EMERGENT_LLM_KEY"),
-            session_id=f"compliance-{submission.get('_id', 'new')}",
-            system_message="""You are a content compliance reviewer for a film distribution platform. 
-            Analyze film submissions for:
-            1. Content appropriateness (no explicit violence, hate speech, illegal content)
-            2. Professional quality indicators (proper metadata, clear descriptions)
-            3. Distribution readiness (complete information, marketable content)
-            
-            Respond in JSON format with:
-            {
-                "content_appropriate": true/false,
-                "professional_quality": true/false,
-                "distribution_ready": true/false,
-                "issues": ["list of issues if any"],
-                "suggestions": ["list of improvement suggestions"],
-                "overall_passed": true/false
-            }"""
-        ).with_model("openai", "gpt-4o")
+            base_url="https://ai.emergentmethods.ai/v1"
+        )
+        
+        system_message = """You are a content compliance reviewer for a film distribution platform. 
+Analyze film submissions for:
+1. Content appropriateness (no explicit violence, hate speech, illegal content)
+2. Professional quality indicators (proper metadata, clear descriptions)
+3. Distribution readiness (complete information, marketable content)
+
+Respond ONLY with valid JSON (no markdown):
+{"content_appropriate": true, "professional_quality": true, "distribution_ready": true, "issues": [], "suggestions": [], "overall_passed": true}"""
         
         prompt = f"""Review this film submission:
-        
+
 Title: {submission.get('title')}
 Short Description: {submission.get('short_description')}
 Full Description: {submission.get('description')}
@@ -256,13 +250,20 @@ Is First Film: {submission.get('is_first_film', False)}
 
 Analyze for content compliance and distribution readiness."""
 
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
+        )
+        
+        result_text = response.choices[0].message.content
         
         # Parse JSON response
         try:
-            # Extract JSON from response
-            json_match = re.search(r'\{[\s\S]*\}', response)
+            json_match = re.search(r'\{[\s\S]*\}', result_text)
             if json_match:
                 return json.loads(json_match.group())
         except json.JSONDecodeError:
