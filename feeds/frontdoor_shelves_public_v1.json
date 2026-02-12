@@ -1,0 +1,59 @@
+{
+  "providerName": "Front Door",
+  "lastUpdated": "2026-02-12T03:37:05.394952+00:00",
+  "language": "en-US",
+  "categories": [
+    {
+      "title": "Buyer: Acquisition Ready",
+      "items": [
+        {
+          "title": "Coming Soon",
+          "shortDescription": "New content arriving soon",
+          "description": "Check back for new films in this category.",
+          "poster": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor_hero.png",
+          "videoUrl": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor.mp4",
+          "videoType": "mp4"
+        }
+      ]
+    },
+    {
+      "title": "Buyer: Festival Winners & Official Selections",
+      "items": [
+        {
+          "title": "Coming Soon",
+          "shortDescription": "New content arriving soon",
+          "description": "Check back for new films in this category.",
+          "poster": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor_hero.png",
+          "videoUrl": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor.mp4",
+          "videoType": "mp4"
+        }
+      ]
+    },
+    {
+      "title": "Buyer: New Voices",
+      "items": [
+        {
+          "title": "Coming Soon",
+          "shortDescription": "New content arriving soon",
+          "description": "Check back for new films in this category.",
+          "poster": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor_hero.png",
+          "videoUrl": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor.mp4",
+          "videoType": "mp4"
+        }
+      ]
+    },
+    {
+      "title": "Buyer: High-Concept Shorts",
+      "items": [
+        {
+          "title": "Coming Soon",
+          "shortDescription": "New content arriving soon",
+          "description": "Check back for new films in this category.",
+          "poster": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor_hero.png",
+          "videoUrl": "https://frontdoormedia.org/wp-content/uploads/2026/01/frontdoor.mp4",
+          "videoType": "mp4"
+        }
+      ]
+    }
+  ]
+}
