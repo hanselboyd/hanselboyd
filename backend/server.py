@@ -185,9 +185,9 @@ async def run_technical_qa(video_url: str) -> Dict[str, Any]:
         checks["details"]["audio_codec"] = audio_stream.get("codec_name")
         checks["details"]["audio_channels"] = audio_stream.get("channels")
     
-    # Duration check (1 min to 60 min for shorts)
+    # Duration check (30 sec to 90 min for shorts - flexible range)
     duration = float(probe_data.get("format", {}).get("duration", 0))
-    checks["duration_valid"] = 60 <= duration <= 3600
+    checks["duration_valid"] = 30 <= duration <= 5400
     checks["details"]["duration_seconds"] = round(duration, 2)
     checks["details"]["duration_minutes"] = round(duration / 60, 1)
     
