@@ -534,6 +534,21 @@ function App() {
     }
   };
 
+  // If portal mode, show filmmaker portal
+  if (isPortal) {
+    return (
+      <div>
+        <button 
+          onClick={() => { setIsPortal(false); window.history.pushState({}, '', '/'); }}
+          className="fixed top-4 left-4 z-50 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-sm rounded-lg"
+        >
+          ← Admin Dashboard
+        </button>
+        <FilmmakerPortal />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-900 text-white" data-testid="dashboard">
       {/* Notification */}
