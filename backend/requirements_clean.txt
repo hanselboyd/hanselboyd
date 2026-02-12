@@ -1,0 +1,11 @@
+emergentintegrations==0.1.0
+fastapi==0.110.1
+httpx==0.28.1
+openai==1.99.9
+pydantic==2.12.5
+pydantic_core==2.41.5
+pymongo==4.5.0
+python-dotenv==1.2.1
+sendgrid==6.12.5
+starlette==0.37.2
+uvicorn==0.25.0
