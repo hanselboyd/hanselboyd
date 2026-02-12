@@ -103,3 +103,19 @@ Build a software according to this flow: Upload → AI/QA compliance → classif
 ### SendGrid Integration
 - API key configured
 - Email notifications enabled for QA reports
+
+## Update: Feb 12, 2026 - Email Notifications with Portal Links
+
+### Enhanced Email System
+- **Beautiful HTML email templates** with gradient headers and clear CTAs
+- **QA Report Emails**: Sent after QA processing with technical check results
+- **Publish Notification**: Congratulations email when film goes live
+- **Reject Notification**: Polite notification with reason
+- **All emails include portal link** so filmmakers can track status anytime
+
+### Email Templates Include:
+- Film title and status
+- Technical check results (video, codec, resolution, audio)
+- Issues and recommendations
+- Direct "View in Filmmaker Portal" button
+- Mobile-responsive design
