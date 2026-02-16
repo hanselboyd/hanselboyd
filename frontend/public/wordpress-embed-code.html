@@ -1,0 +1,443 @@
+<!-- 
+FRONT DOOR MEDIA SUBMISSION FORM - WordPress Embed Version
+Copy this entire code block into a Custom HTML block in WordPress
+-->
+
+<style>
+.fd-submission-container * { margin: 0; padding: 0; box-sizing: border-box; }
+.fd-submission-container { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%); min-height: 100vh; color: #e0e0e0; line-height: 1.6; max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+.fd-form-header { text-align: center; margin-bottom: 32px; }
+.fd-form-header h1 { font-size: 2.5rem; font-weight: 700; background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+.fd-form-header p { color: #888; font-size: 1.1rem; }
+.fd-portal-link-bar { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; margin-bottom: 32px; border: 1px solid rgba(255, 255, 255, 0.06); }
+.fd-portal-link-bar span { color: #666; font-size: 0.9rem; }
+.fd-portal-link-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease; }
+.fd-portal-link-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+.fd-progress-steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 40px; }
+.fd-step { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: rgba(255, 255, 255, 0.03); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.3s ease; }
+.fd-step.active { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); }
+.fd-step.completed { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); }
+.fd-step-number { width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; }
+.fd-step.active .fd-step-number { background: #6366f1; color: #fff; }
+.fd-step.completed .fd-step-number { background: #22c55e; color: #fff; }
+.fd-step-label { font-size: 0.9rem; color: #888; }
+.fd-step.active .fd-step-label, .fd-step.completed .fd-step-label { color: #fff; }
+.fd-step-connector { width: 40px; height: 2px; background: rgba(255, 255, 255, 0.1); }
+.fd-submission-form { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 32px; }
+.fd-form-section { margin-bottom: 32px; }
+.fd-form-section:last-of-type { margin-bottom: 24px; }
+.fd-form-section h3 { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.fd-form-group { margin-bottom: 20px; }
+.fd-form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: #ccc; margin-bottom: 8px; }
+.fd-char-count { font-weight: 400; color: #666; font-size: 0.8rem; }
+.fd-form-group input, .fd-form-group textarea, .fd-form-group select { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: #fff; font-size: 1rem; font-family: inherit; transition: all 0.2s ease; }
+.fd-form-group input:focus, .fd-form-group textarea:focus, .fd-form-group select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+.fd-form-group input::placeholder, .fd-form-group textarea::placeholder { color: #555; }
+.fd-form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px; padding-right: 44px; }
+.fd-form-group select option { background: #1a1a2e; color: #fff; padding: 12px; }
+.fd-form-group textarea { resize: vertical; min-height: 120px; }
+.fd-form-group input.fd-error, .fd-form-group textarea.fd-error, .fd-form-group select.fd-error { border-color: #ef4444; }
+.fd-error-message { color: #ef4444; font-size: 0.8rem; margin-top: 6px; }
+.fd-help-text { display: block; color: #666; font-size: 0.8rem; margin-top: 6px; }
+.fd-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 600px) { .fd-form-row { grid-template-columns: 1fr; } }
+.fd-checkbox-group { margin-top: 8px; }
+.fd-checkbox-group label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; }
+.fd-checkbox-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #6366f1; }
+.fd-form-footer { margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.fd-terms-text { color: #666; font-size: 0.85rem; margin-bottom: 20px; line-height: 1.7; }
+.fd-terms-text a { color: #6366f1; text-decoration: none; }
+.fd-terms-text a:hover { text-decoration: underline; }
+.fd-continue-btn, .fd-submit-btn { width: 100%; padding: 16px 24px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+.fd-continue-btn:hover, .fd-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35); }
+.fd-continue-btn:disabled, .fd-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.fd-back-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: #888; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; margin-right: 12px; transition: all 0.2s ease; }
+.fd-back-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.fd-payment-section { display: none; }
+.fd-payment-section.fd-active { display: block; }
+.fd-details-section.fd-hidden { display: none; }
+.fd-payment-summary { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.fd-payment-summary h4 { font-size: 0.9rem; color: #888; margin-bottom: 8px; }
+.fd-payment-summary .fd-film-title { font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 16px; }
+.fd-payment-summary .fd-price { font-size: 2rem; font-weight: 700; color: #6366f1; }
+.fd-payment-summary .fd-price-note { color: #666; font-size: 0.85rem; margin-top: 4px; }
+#fd-card-element { padding: 16px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; margin-bottom: 20px; }
+#fd-card-errors { color: #ef4444; font-size: 0.85rem; margin-bottom: 16px; }
+.fd-success-message { display: none; text-align: center; padding: 60px 40px; }
+.fd-success-message.fd-active { display: block; }
+.fd-success-icon { width: 80px; height: 80px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+.fd-success-icon svg { width: 40px; height: 40px; color: #fff; }
+.fd-success-message h2 { font-size: 1.75rem; font-weight: 700; color: #fff; margin-bottom: 16px; }
+.fd-success-message p { color: #888; margin-bottom: 12px; }
+.fd-success-message .fd-email-highlight { color: #6366f1; font-weight: 600; }
+.fd-loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; animation: fd-spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes fd-spin { to { transform: rotate(360deg); } }
+.fd-form-actions { display: flex; gap: 12px; }
+.fd-form-actions .fd-continue-btn, .fd-form-actions .fd-submit-btn { flex: 1; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+
+<div class="fd-submission-container">
+    <div class="fd-form-header">
+        <h1>Submit Your Film</h1>
+        <p>Join our curated Broadcast Network connecting filmmakers with buyers and audiences worldwide.</p>
+    </div>
+
+    <div class="fd-portal-link-bar">
+        <span>Already submitted?</span>
+        <button class="fd-portal-link-btn" onclick="window.open('https://frontdoormedia.org/filmmaker-portal', '_blank')">Track Your Submission →</button>
+    </div>
+
+    <!-- Success Message -->
+    <div class="fd-success-message" id="fd-success-message">
+        <div class="fd-success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2>Submission Received!</h2>
+        <p>Your film has been submitted successfully.</p>
+        <p>You'll receive a confirmation email at <span class="fd-email-highlight" id="fd-submitted-email"></span></p>
+        <p>Our team will review your submission and get back to you within 48 hours.</p>
+    </div>
+
+    <!-- Form Container -->
+    <div id="fd-form-container">
+        <div class="fd-progress-steps">
+            <div class="fd-step active" id="fd-step-1">
+                <span class="fd-step-number">1</span>
+                <span class="fd-step-label">Film Details</span>
+            </div>
+            <div class="fd-step-connector"></div>
+            <div class="fd-step" id="fd-step-2">
+                <span class="fd-step-number">2</span>
+                <span class="fd-step-label">Payment</span>
+            </div>
+        </div>
+
+        <form class="fd-submission-form" id="fd-submission-form">
+            <!-- Step 1: Film Details -->
+            <div class="fd-details-section" id="fd-details-section">
+                <section class="fd-form-section">
+                    <h3>Film Details</h3>
+                    
+                    <div class="fd-form-group">
+                        <label for="fd-film_title">Film Title *</label>
+                        <input type="text" id="fd-film_title" name="film_title" required>
+                        <span class="fd-error-message" id="fd-film_title-error"></span>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label for="fd-tagline">Tagline / Short Description * <span class="fd-char-count">(<span id="fd-tagline-count">0</span>/150)</span></label>
+                        <input type="text" id="fd-tagline" name="tagline" maxlength="150" required>
+                        <span class="fd-error-message" id="fd-tagline-error"></span>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label for="fd-synopsis">Full Synopsis *</label>
+                        <textarea id="fd-synopsis" name="synopsis" rows="5" required></textarea>
+                        <span class="fd-error-message" id="fd-synopsis-error"></span>
+                    </div>
+
+                    <div class="fd-form-row">
+                        <div class="fd-form-group">
+                            <label for="fd-genre">Genre *</label>
+                            <select id="fd-genre" name="genre" required>
+                                <option value="">Select Genre</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Comedy">Comedy</option>
+                                <option value="Documentary">Documentary</option>
+                                <option value="Horror">Horror</option>
+                                <option value="Thriller">Thriller</option>
+                                <option value="Sci-Fi">Sci-Fi</option>
+                                <option value="Animation">Animation</option>
+                                <option value="Experimental">Experimental</option>
+                                <option value="Music Video">Music Video</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span class="fd-error-message" id="fd-genre-error"></span>
+                        </div>
+
+                        <div class="fd-form-group">
+                            <label for="fd-runtime">Runtime (minutes)</label>
+                            <input type="number" id="fd-runtime" name="runtime" min="1" max="180">
+                        </div>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label for="fd-awards">Festival Awards & Selections</label>
+                        <input type="text" id="fd-awards" name="awards" placeholder="e.g., Official Selection - Sundance 2025">
+                    </div>
+
+                    <div class="fd-form-group fd-checkbox-group">
+                        <label>
+                            <input type="checkbox" id="fd-first_film" name="first_film">
+                            This is my first film
+                        </label>
+                    </div>
+                </section>
+
+                <section class="fd-form-section">
+                    <h3>Media Files</h3>
+
+                    <div class="fd-form-group">
+                        <label for="fd-video_url">Video URL *</label>
+                        <input type="url" id="fd-video_url" name="video_url" placeholder="https://..." required>
+                        <span class="fd-help-text">Direct link to your video file (MP4 preferred). Supported: Vimeo, YouTube, Dropbox, Google Drive, or direct URL.</span>
+                        <span class="fd-error-message" id="fd-video_url-error"></span>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label for="fd-poster_url">Poster/Thumbnail URL *</label>
+                        <input type="url" id="fd-poster_url" name="poster_url" placeholder="https://..." required>
+                        <span class="fd-help-text">High-resolution poster image (minimum 1280x720, JPG or PNG).</span>
+                        <span class="fd-error-message" id="fd-poster_url-error"></span>
+                    </div>
+                </section>
+
+                <section class="fd-form-section">
+                    <h3>Filmmaker Information</h3>
+
+                    <div class="fd-form-group">
+                        <label for="fd-filmmaker_name">Your Name *</label>
+                        <input type="text" id="fd-filmmaker_name" name="filmmaker_name" required>
+                        <span class="fd-error-message" id="fd-filmmaker_name-error"></span>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label for="fd-email">Email Address *</label>
+                        <input type="email" id="fd-email" name="email" required>
+                        <span class="fd-error-message" id="fd-email-error"></span>
+                    </div>
+                </section>
+
+                <div class="fd-form-footer">
+                    <p class="fd-terms-text">
+                        By continuing, you confirm that you have the rights to submit this film and agree to the 
+                        <a href="https://frontdoormedia.org/terms" target="_blank">Terms of Service</a> and 
+                        <a href="https://frontdoormedia.org/submission-guidelines" target="_blank">Submission Guidelines</a>.
+                    </p>
+                    <button type="button" class="fd-continue-btn" id="fd-continue-to-payment">Continue to Payment</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Payment -->
+            <div class="fd-payment-section" id="fd-payment-section">
+                <section class="fd-form-section">
+                    <h3>Payment</h3>
+
+                    <div class="fd-payment-summary">
+                        <h4>Submission Fee</h4>
+                        <div class="fd-film-title" id="fd-summary-film-title">Your Film Title</div>
+                        <div class="fd-price">$25.00</div>
+                        <div class="fd-price-note">One-time submission fee</div>
+                    </div>
+
+                    <div class="fd-form-group">
+                        <label>Card Details</label>
+                        <div id="fd-card-element"></div>
+                        <div id="fd-card-errors" role="alert"></div>
+                    </div>
+                </section>
+
+                <div class="fd-form-footer">
+                    <div class="fd-form-actions">
+                        <button type="button" class="fd-back-btn" id="fd-back-to-details">← Back</button>
+                        <button type="submit" class="fd-submit-btn" id="fd-submit-btn">
+                            <span id="fd-submit-text">Pay & Submit</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Configuration - Your API endpoint
+    const CONFIG = {
+        STRIPE_PUBLIC_KEY: 'pk_live_51T0rflF8g6zxqgeMOd3kJViRC6aE7h1QVeElrteBBXC63MrSGXvlBvlUSRlBXOUZr7tCf60j2cL92mAutHhuL1C800NJ075iec',
+        API_URL: 'https://roku-feed-debug.preview.emergentagent.com/api',
+        SUBMISSION_FEE: 2500
+    };
+
+    // Initialize Stripe
+    const stripe = Stripe(CONFIG.STRIPE_PUBLIC_KEY);
+    const elements = stripe.elements({
+        appearance: {
+            theme: 'night',
+            variables: {
+                colorPrimary: '#6366f1',
+                colorBackground: 'rgba(0, 0, 0, 0.3)',
+                colorText: '#ffffff',
+                colorDanger: '#ef4444',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                borderRadius: '10px'
+            }
+        }
+    });
+
+    const cardElement = elements.create('card', {
+        style: { base: { fontSize: '16px', color: '#ffffff', '::placeholder': { color: '#666666' } } }
+    });
+    cardElement.mount('#fd-card-element');
+
+    cardElement.on('change', (event) => {
+        document.getElementById('fd-card-errors').textContent = event.error ? event.error.message : '';
+    });
+
+    let formData = {};
+
+    const form = document.getElementById('fd-submission-form');
+    const detailsSection = document.getElementById('fd-details-section');
+    const paymentSection = document.getElementById('fd-payment-section');
+    const continueBtn = document.getElementById('fd-continue-to-payment');
+    const backBtn = document.getElementById('fd-back-to-details');
+    const submitBtn = document.getElementById('fd-submit-btn');
+    const step1 = document.getElementById('fd-step-1');
+    const step2 = document.getElementById('fd-step-2');
+    const successMessage = document.getElementById('fd-success-message');
+    const formContainer = document.getElementById('fd-form-container');
+
+    document.getElementById('fd-tagline').addEventListener('input', (e) => {
+        document.getElementById('fd-tagline-count').textContent = e.target.value.length;
+    });
+
+    function validateDetails() {
+        const requiredFields = ['fd-film_title', 'fd-tagline', 'fd-synopsis', 'fd-genre', 'fd-video_url', 'fd-poster_url', 'fd-filmmaker_name', 'fd-email'];
+        let isValid = true;
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            const errorEl = document.getElementById(`${fieldId}-error`);
+            
+            if (!field.value.trim()) {
+                field.classList.add('fd-error');
+                if (errorEl) errorEl.textContent = 'This field is required';
+                isValid = false;
+            } else {
+                field.classList.remove('fd-error');
+                if (errorEl) errorEl.textContent = '';
+            }
+        });
+
+        const emailField = document.getElementById('fd-email');
+        const emailError = document.getElementById('fd-email-error');
+        if (emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
+            emailField.classList.add('fd-error');
+            emailError.textContent = 'Please enter a valid email address';
+            isValid = false;
+        }
+
+        ['fd-video_url', 'fd-poster_url'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            const errorEl = document.getElementById(`${fieldId}-error`);
+            if (field.value) {
+                try { new URL(field.value); } catch {
+                    field.classList.add('fd-error');
+                    if (errorEl) errorEl.textContent = 'Please enter a valid URL';
+                    isValid = false;
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    continueBtn.addEventListener('click', () => {
+        if (!validateDetails()) return;
+
+        formData = {
+            film_title: document.getElementById('fd-film_title').value,
+            tagline: document.getElementById('fd-tagline').value,
+            synopsis: document.getElementById('fd-synopsis').value,
+            genre: document.getElementById('fd-genre').value,
+            runtime: document.getElementById('fd-runtime').value || null,
+            awards: document.getElementById('fd-awards').value || null,
+            first_film: document.getElementById('fd-first_film').checked,
+            video_url: document.getElementById('fd-video_url').value,
+            poster_url: document.getElementById('fd-poster_url').value,
+            filmmaker_name: document.getElementById('fd-filmmaker_name').value,
+            email: document.getElementById('fd-email').value
+        };
+
+        document.getElementById('fd-summary-film-title').textContent = formData.film_title;
+
+        detailsSection.classList.add('fd-hidden');
+        paymentSection.classList.add('fd-active');
+        step1.classList.remove('active');
+        step1.classList.add('completed');
+        step2.classList.add('active');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    backBtn.addEventListener('click', () => {
+        paymentSection.classList.remove('fd-active');
+        detailsSection.classList.remove('fd-hidden');
+        step2.classList.remove('active');
+        step1.classList.remove('completed');
+        step1.classList.add('active');
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        document.getElementById('fd-submit-text').innerHTML = '<span class="fd-loading-spinner"></span>Processing...';
+
+        try {
+            const intentResponse = await fetch(`${CONFIG.API_URL}/create-payment-intent`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: CONFIG.SUBMISSION_FEE,
+                    email: formData.email,
+                    film_title: formData.film_title
+                })
+            });
+
+            if (!intentResponse.ok) throw new Error('Failed to create payment intent');
+
+            const { client_secret } = await intentResponse.json();
+
+            const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: { name: formData.filmmaker_name, email: formData.email }
+                }
+            });
+
+            if (error) throw new Error(error.message);
+
+            if (paymentIntent.status === 'succeeded') {
+                const submitResponse = await fetch(`${CONFIG.API_URL}/submissions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...formData,
+                        payment_intent_id: paymentIntent.id,
+                        amount_paid: CONFIG.SUBMISSION_FEE
+                    })
+                });
+
+                if (!submitResponse.ok) throw new Error('Failed to save submission');
+
+                document.getElementById('fd-submitted-email').textContent = formData.email;
+                formContainer.style.display = 'none';
+                successMessage.classList.add('fd-active');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            document.getElementById('fd-card-errors').textContent = error.message || 'An error occurred. Please try again.';
+            submitBtn.disabled = false;
+            document.getElementById('fd-submit-text').textContent = 'Pay & Submit';
+        }
+    });
+})();
+</script>
