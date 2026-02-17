@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Front Door Film Submissions
  * Plugin URI: https://frontdoormedia.org
- * Description: Film submission form for Front Door Media. Use shortcode [frontdoor_submission_form] to embed the form.
- * Version: 1.0.0
+ * Description: Film submission form for Front Door Media with Stripe payment. Use shortcode [frontdoor_submission_form] to embed the form.
+ * Version: 2.0.0
  * Author: Front Door Media
  * License: GPL v2 or later
  */
@@ -15,12 +15,25 @@ if (!defined('ABSPATH')) {
 
 // Define plugin constants
 define('FRONTDOOR_API_URL', 'https://frontdoor-api-npz4.onrender.com');
-define('FRONTDOOR_VERSION', '1.0.0');
+define('FRONTDOOR_VERSION', '2.0.0');
+define('FRONTDOOR_SUBMISSION_FEE', 25.00); // Submission fee in USD
+
+/**
+ * Get Stripe keys from wp-config.php or options
+ */
+function frontdoor_get_stripe_keys() {
+    return array(
+        'publishable' => defined('FRONTDOOR_STRIPE_PUBLISHABLE_KEY') ? FRONTDOOR_STRIPE_PUBLISHABLE_KEY : get_option('frontdoor_stripe_publishable_key', ''),
+        'secret' => defined('FRONTDOOR_STRIPE_SECRET_KEY') ? FRONTDOOR_STRIPE_SECRET_KEY : get_option('frontdoor_stripe_secret_key', '')
+    );
+}
 
 /**
  * Enqueue plugin styles and scripts
  */
 function frontdoor_enqueue_assets() {
+    $stripe_keys = frontdoor_get_stripe_keys();
+    
     wp_enqueue_style(
         'frontdoor-submissions',
         plugin_dir_url(__FILE__) . 'assets/css/frontdoor-form.css',
@@ -39,13 +52,15 @@ function frontdoor_enqueue_assets() {
     wp_localize_script('frontdoor-submissions', 'frontdoorAjax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('frontdoor_submit_nonce'),
-        'apiUrl' => FRONTDOOR_API_URL
+        'apiUrl' => FRONTDOOR_API_URL,
+        'stripePublishable' => $stripe_keys['publishable'],
+        'submissionFee' => FRONTDOOR_SUBMISSION_FEE
     ));
 }
 add_action('wp_enqueue_scripts', 'frontdoor_enqueue_assets');
 
 /**
- * Shortcode for the submission form
+ * Shortcode for the submission form with Stripe payment
  */
 function frontdoor_submission_form_shortcode($atts) {
     $atts = shortcode_atts(array(
@@ -53,23 +68,41 @@ function frontdoor_submission_form_shortcode($atts) {
         'show_guidelines' => 'true'
     ), $atts);
     
+    // Check for return from Stripe
+    $session_id = isset($_GET['session_id']) ? sanitize_text_field($_GET['session_id']) : '';
+    $payment_cancelled = isset($_GET['payment_cancelled']) ? true : false;
+    
     ob_start();
     ?>
     <div class="frontdoor-submission-wrapper">
         <div class="frontdoor-form-header">
             <h2><?php echo esc_html($atts['title']); ?></h2>
             <?php if ($atts['show_guidelines'] === 'true'): ?>
-            <p class="frontdoor-subtitle">Join our curated platform connecting filmmakers with buyers and audiences worldwide.</p>
+            <p class="frontdoor-subtitle">Join our curated Broadcast Network connecting filmmakers with buyers and audiences worldwide.</p>
             <?php endif; ?>
+            <p class="frontdoor-portal-link">Already submitted?<a href="/filmmaker-portal">Track Your Submission &rarr;</a></p>
+        </div>
+        
+        <!-- Progress Steps -->
+        <div class="frontdoor-progress">
+            <div class="frontdoor-step active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Film Details</span>
+            </div>
+            <div class="frontdoor-step" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Payment</span>
+            </div>
         </div>
         
         <!-- Success Message (hidden by default) -->
         <div id="frontdoor-success" class="frontdoor-message frontdoor-success" style="display: none;">
-            <div class="frontdoor-message-icon">✓</div>
+            <div class="frontdoor-message-icon">&#10003;</div>
             <h3>Submission Received!</h3>
             <p>Your film has been submitted successfully. Our automated QA system is now reviewing your submission.</p>
             <p>You'll receive an email at <strong id="frontdoor-submitted-email"></strong> with your QA results and next steps.</p>
-            <p class="frontdoor-tracking">Track your submission status anytime at our <a href="/filmmaker-portal">Filmmaker Portal</a>.</p>
+            <p class="frontdoor-tracking">Track your submission status anytime</p>
+            <a href="/filmmaker-portal" class="frontdoor-btn-secondary">View in Filmmaker Portal &rarr;</a>
         </div>
         
         <!-- Error Message (hidden by default) -->
@@ -79,117 +112,167 @@ function frontdoor_submission_form_shortcode($atts) {
             <p id="frontdoor-error-text">There was an error processing your submission. Please try again.</p>
         </div>
         
+        <!-- Payment Cancelled Message -->
+        <?php if ($payment_cancelled): ?>
+        <div class="frontdoor-message frontdoor-warning">
+            <div class="frontdoor-message-icon">!</div>
+            <h3>Payment Cancelled</h3>
+            <p>Your payment was cancelled. Please fill out the form again to submit your film.</p>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Processing Payment Message (shown when returning from Stripe) -->
+        <div id="frontdoor-processing" class="frontdoor-message frontdoor-processing" style="display: <?php echo $session_id ? 'block' : 'none'; ?>;">
+            <div class="frontdoor-spinner"></div>
+            <h3>Processing your submission...</h3>
+            <p>We received your payment, please wait while we complete your submission.</p>
+        </div>
+        
         <!-- Submission Form -->
-        <form id="frontdoor-submission-form" class="frontdoor-form">
-            <div class="frontdoor-form-section">
-                <h3>Film Details</h3>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-title">Film Title <span class="required">*</span></label>
-                    <input type="text" id="fd-title" name="title" required placeholder="Enter your film's title">
-                </div>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-short-description">Tagline / Short Description <span class="required">*</span></label>
-                    <input type="text" id="fd-short-description" name="short_description" required maxlength="150" placeholder="A brief one-line description (max 150 characters)">
-                    <span class="frontdoor-char-count"><span id="fd-short-desc-count">0</span>/150</span>
-                </div>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-description">Full Synopsis <span class="required">*</span></label>
-                    <textarea id="fd-description" name="description" required rows="4" placeholder="Tell us about your film's story, themes, and what makes it unique..."></textarea>
-                </div>
-                
-                <div class="frontdoor-field-row">
+        <form id="frontdoor-submission-form" class="frontdoor-form" style="display: <?php echo ($session_id || $payment_cancelled) ? 'none' : 'block'; ?>;">
+            <!-- Step 1: Film Details -->
+            <div class="frontdoor-form-step" data-step="1">
+                <div class="frontdoor-form-section">
+                    <h3>Film Details</h3>
+                    
                     <div class="frontdoor-field">
-                        <label for="fd-genre">Genre</label>
-                        <select id="fd-genre" name="genre">
-                            <option value="">Select Genre</option>
-                            <option value="Drama">Drama</option>
-                            <option value="Comedy">Comedy</option>
-                            <option value="Documentary">Documentary</option>
-                            <option value="Horror">Horror</option>
-                            <option value="Thriller">Thriller</option>
-                            <option value="Sci-Fi">Sci-Fi</option>
-                            <option value="Animation">Animation</option>
-                            <option value="Experimental">Experimental</option>
-                            <option value="Music Video">Music Video</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <label for="fd-title">Film Title <span class="required">*</span></label>
+                        <input type="text" id="fd-title" name="title" required placeholder="Enter your film's title">
                     </div>
                     
                     <div class="frontdoor-field">
-                        <label for="fd-runtime">Runtime (minutes)</label>
-                        <input type="number" id="fd-runtime" name="runtime_minutes" min="1" max="180" placeholder="e.g., 15">
-                    </div>
-                </div>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-awards">Festival Awards & Selections</label>
-                    <textarea id="fd-awards" name="festival_awards" rows="2" placeholder="List any festivals, awards, or official selections..."></textarea>
-                </div>
-                
-                <div class="frontdoor-field frontdoor-checkbox">
-                    <label>
-                        <input type="checkbox" id="fd-first-film" name="is_first_film" value="1">
-                        <span>This is my first film</span>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="frontdoor-form-section">
-                <h3>Media Files</h3>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-video-url">Video URL <span class="required">*</span></label>
-                    <input type="url" id="fd-video-url" name="video_url" required placeholder="https://your-hosting.com/your-film.mp4">
-                    <p class="frontdoor-help">Direct link to your video file (MP4 preferred). Supported hosts: Vimeo, YouTube, Dropbox, Google Drive, or direct URL.</p>
-                </div>
-                
-                <div class="frontdoor-field">
-                    <label for="fd-poster-url">Poster/Thumbnail URL <span class="required">*</span></label>
-                    <input type="url" id="fd-poster-url" name="poster_url" required placeholder="https://your-hosting.com/poster.jpg">
-                    <p class="frontdoor-help">High-resolution poster image (minimum 1280x720, JPG or PNG).</p>
-                </div>
-            </div>
-            
-            <div class="frontdoor-form-section">
-                <h3>Filmmaker Information</h3>
-                
-                <div class="frontdoor-field-row">
-                    <div class="frontdoor-field">
-                        <label for="fd-filmmaker-name">Your Name <span class="required">*</span></label>
-                        <input type="text" id="fd-filmmaker-name" name="filmmaker_name" required placeholder="Full name">
+                        <label for="fd-short-description">Tagline / Short Description <span class="required">*</span></label>
+                        <input type="text" id="fd-short-description" name="short_description" required maxlength="150" placeholder="A brief one-line description (max 150 characters)">
+                        <span class="frontdoor-char-count"><span id="fd-short-desc-count">0</span>/150</span>
                     </div>
                     
                     <div class="frontdoor-field">
-                        <label for="fd-filmmaker-email">Email Address <span class="required">*</span></label>
-                        <input type="email" id="fd-filmmaker-email" name="filmmaker_email" required placeholder="your@email.com">
+                        <label for="fd-description">Full Synopsis <span class="required">*</span></label>
+                        <textarea id="fd-description" name="description" required rows="4" placeholder="Tell us about your film's story, themes, and what makes it unique..."></textarea>
+                    </div>
+                    
+                    <div class="frontdoor-field-row">
+                        <div class="frontdoor-field">
+                            <label for="fd-genre">Genre <span class="required">*</span></label>
+                            <select id="fd-genre" name="genre" required>
+                                <option value="">Select Genre</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Comedy">Comedy</option>
+                                <option value="Documentary">Documentary</option>
+                                <option value="Horror">Horror</option>
+                                <option value="Thriller">Thriller</option>
+                                <option value="Sci-Fi">Sci-Fi</option>
+                                <option value="Animation">Animation</option>
+                                <option value="Experimental">Experimental</option>
+                                <option value="Music Video">Music Video</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="frontdoor-field">
+                            <label for="fd-runtime">Runtime (minutes)</label>
+                            <input type="number" id="fd-runtime" name="runtime_minutes" min="1" max="180" placeholder="e.g., 15">
+                        </div>
+                    </div>
+                    
+                    <div class="frontdoor-field">
+                        <label for="fd-awards">Festival Awards & Selections</label>
+                        <textarea id="fd-awards" name="festival_awards" rows="2" placeholder="List any festivals, awards, or official selections..."></textarea>
+                    </div>
+                    
+                    <div class="frontdoor-field frontdoor-checkbox">
+                        <label>
+                            <input type="checkbox" id="fd-first-film" name="is_first_film" value="1">
+                            <span>This is my first film</span>
+                        </label>
                     </div>
                 </div>
-            </div>
-            
-            <div class="frontdoor-form-section frontdoor-terms">
-                <div class="frontdoor-field frontdoor-checkbox">
-                    <label>
-                        <input type="checkbox" id="fd-terms" name="terms" required>
-                        <span>I confirm that I have the rights to submit this film and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/submission-guidelines" target="_blank">Submission Guidelines</a>. <span class="required">*</span></span>
-                    </label>
+                
+                <div class="frontdoor-form-section">
+                    <h3>Media Files</h3>
+                    
+                    <div class="frontdoor-field">
+                        <label for="fd-video-url">Video URL <span class="required">*</span></label>
+                        <input type="url" id="fd-video-url" name="video_url" required placeholder="https://your-hosting.com/your-film.mp4">
+                        <p class="frontdoor-help">Direct link to your video file (MP4 preferred). Supported: Vimeo, YouTube, Dropbox, Google Drive, or direct URL.</p>
+                    </div>
+                    
+                    <div class="frontdoor-field">
+                        <label for="fd-poster-url">Poster/Thumbnail URL <span class="required">*</span></label>
+                        <input type="url" id="fd-poster-url" name="poster_url" required placeholder="https://your-hosting.com/poster.jpg">
+                        <p class="frontdoor-help">High-resolution poster image (minimum 1280x720, JPG or PNG).</p>
+                    </div>
+                </div>
+                
+                <div class="frontdoor-form-section">
+                    <h3>Filmmaker Information</h3>
+                    
+                    <div class="frontdoor-field-row">
+                        <div class="frontdoor-field">
+                            <label for="fd-filmmaker-name">Your Name <span class="required">*</span></label>
+                            <input type="text" id="fd-filmmaker-name" name="filmmaker_name" required placeholder="Full name">
+                        </div>
+                        
+                        <div class="frontdoor-field">
+                            <label for="fd-filmmaker-email">Email Address <span class="required">*</span></label>
+                            <input type="email" id="fd-filmmaker-email" name="filmmaker_email" required placeholder="your@email.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="frontdoor-form-section frontdoor-terms">
+                    <div class="frontdoor-field frontdoor-checkbox">
+                        <label>
+                            <input type="checkbox" id="fd-terms" name="terms" required>
+                            <span>By continuing, you confirm that you have the rights to submit this film and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/submission-guidelines" target="_blank">Submission Guidelines</a>.</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="frontdoor-form-actions">
+                    <button type="button" id="frontdoor-continue-btn" class="frontdoor-submit-btn">
+                        <span class="btn-text">Continue to Payment</span>
+                    </button>
                 </div>
             </div>
             
-            <div class="frontdoor-form-actions">
-                <button type="submit" id="frontdoor-submit-btn" class="frontdoor-submit-btn">
-                    <span class="btn-text">Submit Film for Review</span>
-                    <span class="btn-loading" style="display: none;">
-                        <span class="spinner"></span> Submitting...
-                    </span>
-                </button>
+            <!-- Step 2: Payment -->
+            <div class="frontdoor-form-step" data-step="2" style="display: none;">
+                <div class="frontdoor-form-section">
+                    <button type="button" class="frontdoor-back-btn" id="frontdoor-back-to-details">&larr; Back to Details</button>
+                    
+                    <h3>Payment</h3>
+                    
+                    <div class="frontdoor-payment-summary">
+                        <h4>Your Submission</h4>
+                        <p class="frontdoor-film-title" id="payment-film-title">Your Film Title</p>
+                        <div class="frontdoor-summary-details">
+                            <p><strong>Genre:</strong> <span id="payment-genre"></span></p>
+                            <p><strong>Filmmaker:</strong> <span id="payment-filmmaker"></span></p>
+                            <p><strong>Email:</strong> <span id="payment-email"></span></p>
+                        </div>
+                        
+                        <div class="frontdoor-fee-box">
+                            <span class="fee-label">Submission Fee</span>
+                            <span class="fee-amount">$<?php echo number_format(FRONTDOOR_SUBMISSION_FEE, 2); ?> USD</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="frontdoor-form-actions">
+                    <button type="submit" id="frontdoor-pay-btn" class="frontdoor-submit-btn frontdoor-pay-btn">
+                        <span class="btn-text">Pay & Submit Film</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="spinner"></span> Processing...
+                        </span>
+                    </button>
+                    <p class="frontdoor-secure-note">Secure payment powered by Stripe</p>
+                </div>
             </div>
         </form>
         
         <?php if ($atts['show_guidelines'] === 'true'): ?>
-        <div class="frontdoor-guidelines">
+        <div class="frontdoor-guidelines" id="frontdoor-guidelines">
             <h4>Technical Requirements</h4>
             <ul>
                 <li><strong>Video:</strong> H.264 codec, minimum 720p resolution, MP4 format preferred</li>
@@ -200,13 +283,227 @@ function frontdoor_submission_form_shortcode($atts) {
         </div>
         <?php endif; ?>
     </div>
+    
+    <?php if ($session_id): ?>
+    <script>
+    // Auto-process the submission after returning from Stripe
+    jQuery(document).ready(function($) {
+        var sessionId = '<?php echo esc_js($session_id); ?>';
+        if (sessionId) {
+            frontdoorProcessPayment(sessionId);
+        }
+    });
+    </script>
+    <?php endif; ?>
     <?php
     return ob_get_clean();
 }
 add_shortcode('frontdoor_submission_form', 'frontdoor_submission_form_shortcode');
 
 /**
- * Handle AJAX form submission
+ * Create Stripe Checkout Session
+ */
+function frontdoor_create_checkout_session() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'frontdoor_submit_nonce')) {
+        wp_send_json_error(array('message' => 'Security check failed. Please refresh and try again.'));
+        return;
+    }
+    
+    $stripe_keys = frontdoor_get_stripe_keys();
+    if (empty($stripe_keys['secret'])) {
+        wp_send_json_error(array('message' => 'Payment system not configured. Please contact support.'));
+        return;
+    }
+    
+    // Sanitize and validate form data
+    $submission_data = array(
+        'title' => sanitize_text_field($_POST['title']),
+        'short_description' => sanitize_text_field($_POST['short_description']),
+        'description' => sanitize_textarea_field($_POST['description']),
+        'poster_url' => esc_url_raw($_POST['poster_url']),
+        'video_url' => esc_url_raw($_POST['video_url']),
+        'video_type' => 'mp4',
+        'filmmaker_name' => sanitize_text_field($_POST['filmmaker_name']),
+        'filmmaker_email' => sanitize_email($_POST['filmmaker_email']),
+        'is_first_film' => isset($_POST['is_first_film']) && $_POST['is_first_film'] === '1',
+        'genre' => sanitize_text_field($_POST['genre'])
+    );
+    
+    // Add optional fields
+    if (!empty($_POST['runtime_minutes'])) {
+        $submission_data['runtime_minutes'] = intval($_POST['runtime_minutes']);
+    }
+    if (!empty($_POST['festival_awards'])) {
+        $submission_data['festival_awards'] = sanitize_textarea_field($_POST['festival_awards']);
+    }
+    
+    // Validate required fields
+    $required_fields = array('title', 'short_description', 'description', 'poster_url', 'video_url', 'filmmaker_name', 'filmmaker_email', 'genre');
+    foreach ($required_fields as $field) {
+        if (empty($submission_data[$field])) {
+            wp_send_json_error(array('message' => 'Please fill in all required fields.'));
+            return;
+        }
+    }
+    
+    // Validate email
+    if (!is_email($submission_data['filmmaker_email'])) {
+        wp_send_json_error(array('message' => 'Please enter a valid email address.'));
+        return;
+    }
+    
+    // Store submission data in transient (expires in 1 hour)
+    $submission_key = 'fd_submission_' . wp_generate_password(16, false);
+    set_transient($submission_key, $submission_data, HOUR_IN_SECONDS);
+    
+    // Build success and cancel URLs
+    $current_url = isset($_POST['return_url']) ? esc_url_raw($_POST['return_url']) : home_url('/front-door-submission-form/');
+    $success_url = add_query_arg('session_id', '{CHECKOUT_SESSION_ID}', $current_url);
+    $cancel_url = add_query_arg('payment_cancelled', '1', $current_url);
+    
+    // Create Stripe Checkout Session using cURL
+    $stripe_data = array(
+        'payment_method_types[]' => 'card',
+        'line_items[0][price_data][currency]' => 'usd',
+        'line_items[0][price_data][unit_amount]' => intval(FRONTDOOR_SUBMISSION_FEE * 100), // Convert to cents
+        'line_items[0][price_data][product_data][name]' => 'Film Submission: ' . $submission_data['title'],
+        'line_items[0][price_data][product_data][description]' => 'Front Door Media Film Submission Fee',
+        'line_items[0][quantity]' => 1,
+        'mode' => 'payment',
+        'success_url' => $success_url,
+        'cancel_url' => $cancel_url,
+        'customer_email' => $submission_data['filmmaker_email'],
+        'metadata[submission_key]' => $submission_key,
+        'metadata[film_title]' => $submission_data['title'],
+        'metadata[filmmaker_email]' => $submission_data['filmmaker_email']
+    );
+    
+    $response = wp_remote_post('https://api.stripe.com/v1/checkout/sessions', array(
+        'headers' => array(
+            'Authorization' => 'Basic ' . base64_encode($stripe_keys['secret'] . ':'),
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ),
+        'body' => http_build_query($stripe_data),
+        'timeout' => 30
+    ));
+    
+    if (is_wp_error($response)) {
+        delete_transient($submission_key);
+        wp_send_json_error(array('message' => 'Payment system error. Please try again.'));
+        return;
+    }
+    
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    
+    if (isset($body['error'])) {
+        delete_transient($submission_key);
+        wp_send_json_error(array('message' => 'Payment error: ' . $body['error']['message']));
+        return;
+    }
+    
+    if (isset($body['url'])) {
+        wp_send_json_success(array(
+            'checkout_url' => $body['url'],
+            'session_id' => $body['id']
+        ));
+    } else {
+        delete_transient($submission_key);
+        wp_send_json_error(array('message' => 'Could not create payment session.'));
+    }
+}
+add_action('wp_ajax_frontdoor_create_checkout', 'frontdoor_create_checkout_session');
+add_action('wp_ajax_nopriv_frontdoor_create_checkout', 'frontdoor_create_checkout_session');
+
+/**
+ * Process submission after successful Stripe payment
+ */
+function frontdoor_process_payment() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'frontdoor_submit_nonce')) {
+        wp_send_json_error(array('message' => 'Security check failed.'));
+        return;
+    }
+    
+    $session_id = sanitize_text_field($_POST['session_id']);
+    if (empty($session_id)) {
+        wp_send_json_error(array('message' => 'Invalid payment session.'));
+        return;
+    }
+    
+    $stripe_keys = frontdoor_get_stripe_keys();
+    
+    // Retrieve the Stripe session to verify payment and get metadata
+    $response = wp_remote_get('https://api.stripe.com/v1/checkout/sessions/' . $session_id, array(
+        'headers' => array(
+            'Authorization' => 'Basic ' . base64_encode($stripe_keys['secret'] . ':')
+        ),
+        'timeout' => 30
+    ));
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error(array('message' => 'Could not verify payment.'));
+        return;
+    }
+    
+    $session = json_decode(wp_remote_retrieve_body($response), true);
+    
+    if (!isset($session['payment_status']) || $session['payment_status'] !== 'paid') {
+        wp_send_json_error(array('message' => 'Payment not completed. Status: ' . ($session['payment_status'] ?? 'unknown')));
+        return;
+    }
+    
+    // Get submission data from transient
+    $submission_key = isset($session['metadata']['submission_key']) ? $session['metadata']['submission_key'] : '';
+    $submission_data = get_transient($submission_key);
+    
+    if (!$submission_data) {
+        wp_send_json_error(array('message' => 'Submission data expired. Please resubmit the form.'));
+        return;
+    }
+    
+    // Add payment info to submission
+    $submission_data['stripe_session_id'] = $session_id;
+    $submission_data['payment_amount'] = $session['amount_total'] / 100;
+    $submission_data['payment_currency'] = $session['currency'];
+    
+    // Send to Front Door API
+    $api_response = wp_remote_post(FRONTDOOR_API_URL . '/api/submissions', array(
+        'timeout' => 30,
+        'headers' => array(
+            'Content-Type' => 'application/json'
+        ),
+        'body' => json_encode($submission_data)
+    ));
+    
+    // Clean up transient
+    delete_transient($submission_key);
+    
+    if (is_wp_error($api_response)) {
+        wp_send_json_error(array('message' => 'Submission failed. Please contact support with session ID: ' . $session_id));
+        return;
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($api_response);
+    $response_body = json_decode(wp_remote_retrieve_body($api_response), true);
+    
+    if ($response_code === 200 || $response_code === 201) {
+        wp_send_json_success(array(
+            'message' => 'Submission received successfully!',
+            'submission_id' => isset($response_body['id']) ? $response_body['id'] : '',
+            'email' => $submission_data['filmmaker_email']
+        ));
+    } else {
+        // Payment succeeded but submission failed - log this for manual processing
+        error_log('Front Door: Payment succeeded but submission failed. Session: ' . $session_id . ', Error: ' . print_r($response_body, true));
+        wp_send_json_error(array('message' => 'Payment received but submission failed. Please contact support with session ID: ' . $session_id));
+    }
+}
+add_action('wp_ajax_frontdoor_process_payment', 'frontdoor_process_payment');
+add_action('wp_ajax_nopriv_frontdoor_process_payment', 'frontdoor_process_payment');
+
+/**
+ * Legacy submission handler (without payment - kept for compatibility)
  */
 function frontdoor_handle_submission() {
     // Verify nonce
@@ -356,7 +653,7 @@ function frontdoor_portal_shortcode($atts) {
             
             <!-- Info Section -->
             <div class="frontdoor-portal-info">
-                <div class="frontdoor-portal-info-icon">🎬</div>
+                <div class="frontdoor-portal-info-icon">&#127916;</div>
                 <h3>Check Your Submission Status</h3>
                 <p>Enter the email address you used when submitting your film to see its current status, QA feedback, and publication details.</p>
             </div>
@@ -443,6 +740,15 @@ function frontdoor_admin_menu() {
     
     add_submenu_page(
         'frontdoor-submissions',
+        'Settings',
+        'Settings',
+        'manage_options',
+        'frontdoor-settings',
+        'frontdoor_settings_page'
+    );
+    
+    add_submenu_page(
+        'frontdoor-submissions',
         'Analytics',
         'Analytics',
         'manage_options',
@@ -451,6 +757,66 @@ function frontdoor_admin_menu() {
     );
 }
 add_action('admin_menu', 'frontdoor_admin_menu');
+
+/**
+ * Settings page
+ */
+function frontdoor_settings_page() {
+    // Save settings
+    if (isset($_POST['frontdoor_save_settings']) && wp_verify_nonce($_POST['frontdoor_settings_nonce'], 'frontdoor_save_settings')) {
+        update_option('frontdoor_stripe_publishable_key', sanitize_text_field($_POST['stripe_publishable_key']));
+        update_option('frontdoor_stripe_secret_key', sanitize_text_field($_POST['stripe_secret_key']));
+        echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
+    }
+    
+    $stripe_keys = frontdoor_get_stripe_keys();
+    ?>
+    <div class="wrap">
+        <h1>Front Door Settings</h1>
+        
+        <form method="post">
+            <?php wp_nonce_field('frontdoor_save_settings', 'frontdoor_settings_nonce'); ?>
+            
+            <h2>Stripe Configuration</h2>
+            <p>Enter your Stripe API keys. You can find these in your <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a>.</p>
+            
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="stripe_publishable_key">Publishable Key</label></th>
+                    <td>
+                        <input type="text" name="stripe_publishable_key" id="stripe_publishable_key" class="regular-text" value="<?php echo esc_attr($stripe_keys['publishable']); ?>" placeholder="pk_live_..." />
+                        <p class="description">Starts with pk_live_ or pk_test_</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="stripe_secret_key">Secret Key</label></th>
+                    <td>
+                        <input type="password" name="stripe_secret_key" id="stripe_secret_key" class="regular-text" value="<?php echo esc_attr($stripe_keys['secret']); ?>" placeholder="sk_live_..." />
+                        <p class="description">Starts with sk_live_ or sk_test_. Keep this secret!</p>
+                    </td>
+                </tr>
+            </table>
+            
+            <h2>Submission Fee</h2>
+            <p>Current submission fee: <strong>$<?php echo number_format(FRONTDOOR_SUBMISSION_FEE, 2); ?> USD</strong></p>
+            <p class="description">To change the fee, edit the FRONTDOOR_SUBMISSION_FEE constant in the plugin file.</p>
+            
+            <p class="submit">
+                <input type="submit" name="frontdoor_save_settings" class="button-primary" value="Save Settings" />
+            </p>
+        </form>
+        
+        <hr>
+        
+        <h2>Alternative: wp-config.php Configuration</h2>
+        <p>You can also define Stripe keys in your wp-config.php file (recommended for security):</p>
+        <pre style="background: #f1f1f1; padding: 15px; border-radius: 4px;">
+define('FRONTDOOR_STRIPE_PUBLISHABLE_KEY', 'pk_live_your_key_here');
+define('FRONTDOOR_STRIPE_SECRET_KEY', 'sk_live_your_key_here');
+        </pre>
+    </div>
+    <?php
+}
 
 /**
  * Enqueue admin assets
@@ -577,7 +943,7 @@ function frontdoor_admin_page() {
                                 <button class="button button-primary frontdoor-publish-btn" data-id="<?php echo esc_attr($sub['id']); ?>" data-shelf="<?php echo esc_attr($sub['recommended_shelf'] ?? ''); ?>">Publish</button>
                                 <button class="button frontdoor-reject-btn" data-id="<?php echo esc_attr($sub['id']); ?>">Reject</button>
                             <?php elseif ($sub['status'] === 'published'): ?>
-                                <span style="color: #46b450;">✓ Published</span>
+                                <span style="color: #46b450;">&#10003; Published</span>
                             <?php elseif ($sub['status'] === 'rejected'): ?>
                                 <span style="color: #999;">Rejected</span>
                             <?php else: ?>
@@ -680,22 +1046,22 @@ function frontdoor_render_analytics($stats) {
         <!-- Overview Stats -->
         <div class="frontdoor-analytics-grid">
             <div class="frontdoor-analytics-card">
-                <div class="analytics-icon">🎬</div>
+                <div class="analytics-icon">&#127916;</div>
                 <div class="analytics-value"><?php echo $total; ?></div>
                 <div class="analytics-label">Total Submissions</div>
             </div>
             <div class="frontdoor-analytics-card success">
-                <div class="analytics-icon">✅</div>
+                <div class="analytics-icon">&#10003;</div>
                 <div class="analytics-value"><?php echo $published; ?></div>
                 <div class="analytics-label">Published Films</div>
             </div>
             <div class="frontdoor-analytics-card info">
-                <div class="analytics-icon">📊</div>
+                <div class="analytics-icon">&#128200;</div>
                 <div class="analytics-value"><?php echo $publish_rate; ?>%</div>
                 <div class="analytics-label">Publish Rate</div>
             </div>
             <div class="frontdoor-analytics-card warning">
-                <div class="analytics-icon">🔍</div>
+                <div class="analytics-icon">&#128269;</div>
                 <div class="analytics-value"><?php echo $qa_pass_rate; ?>%</div>
                 <div class="analytics-label">QA Pass Rate</div>
             </div>
@@ -710,13 +1076,13 @@ function frontdoor_render_analytics($stats) {
                     <div class="pipeline-label">Pending</div>
                     <div class="pipeline-bar" style="background: #f59e0b;"></div>
                 </div>
-                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-arrow">&rarr;</div>
                 <div class="pipeline-stage">
                     <div class="pipeline-count"><?php echo $qa_passed + $classified; ?></div>
                     <div class="pipeline-label">Ready for Review</div>
                     <div class="pipeline-bar" style="background: #3b82f6;"></div>
                 </div>
-                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-arrow">&rarr;</div>
                 <div class="pipeline-stage">
                     <div class="pipeline-count"><?php echo $published; ?></div>
                     <div class="pipeline-label">Published</div>
