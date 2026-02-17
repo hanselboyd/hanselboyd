@@ -1,5 +1,5 @@
 /**
- * Front Door Film Submissions - Form JavaScript
+ * Front Door Film Submissions - Form JavaScript with Stripe Payment
  */
 
 (function($) {
@@ -10,12 +10,74 @@
         $('#fd-short-desc-count').text($(this).val().length);
     });
 
-    // Submission form handler
+    // Continue to Payment button
+    $('#frontdoor-continue-btn').on('click', function() {
+        var $form = $('#frontdoor-submission-form');
+        var $step1 = $form.find('[data-step="1"]');
+        var $step2 = $form.find('[data-step="2"]');
+        
+        // Validate required fields in step 1
+        var isValid = true;
+        $step1.find('[required]').each(function() {
+            if (!$(this).val() || ($(this).is(':checkbox') && !$(this).is(':checked'))) {
+                isValid = false;
+                $(this).addClass('frontdoor-invalid');
+            } else {
+                $(this).removeClass('frontdoor-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        // Update payment summary
+        $('#payment-film-title').text($('#fd-title').val());
+        $('#payment-genre').text($('#fd-genre').val() || 'Not specified');
+        $('#payment-filmmaker').text($('#fd-filmmaker-name').val());
+        $('#payment-email').text($('#fd-filmmaker-email').val());
+        
+        // Switch to step 2
+        $step1.hide();
+        $step2.show();
+        
+        // Update progress
+        $('.frontdoor-step[data-step="1"]').removeClass('active').addClass('completed');
+        $('.frontdoor-step[data-step="2"]').addClass('active');
+        
+        // Hide guidelines
+        $('#frontdoor-guidelines').hide();
+        
+        // Scroll to top
+        $('html, body').animate({
+            scrollTop: $('.frontdoor-submission-wrapper').offset().top - 50
+        }, 300);
+    });
+
+    // Back to Details button
+    $('#frontdoor-back-to-details').on('click', function() {
+        var $form = $('#frontdoor-submission-form');
+        var $step1 = $form.find('[data-step="1"]');
+        var $step2 = $form.find('[data-step="2"]');
+        
+        // Switch to step 1
+        $step2.hide();
+        $step1.show();
+        
+        // Update progress
+        $('.frontdoor-step[data-step="2"]').removeClass('active');
+        $('.frontdoor-step[data-step="1"]').removeClass('completed').addClass('active');
+        
+        // Show guidelines
+        $('#frontdoor-guidelines').show();
+    });
+
+    // Payment form submission
     $('#frontdoor-submission-form').on('submit', function(e) {
         e.preventDefault();
         
-        var $form = $(this);
-        var $btn = $('#frontdoor-submit-btn');
+        var $btn = $('#frontdoor-pay-btn');
         var $btnText = $btn.find('.btn-text');
         var $btnLoading = $btn.find('.btn-loading');
         
@@ -29,7 +91,7 @@
         
         // Collect form data
         var formData = {
-            action: 'frontdoor_submit',
+            action: 'frontdoor_create_checkout',
             nonce: frontdoorAjax.nonce,
             title: $('#fd-title').val(),
             short_description: $('#fd-short-description').val(),
@@ -41,57 +103,42 @@
             video_url: $('#fd-video-url').val(),
             poster_url: $('#fd-poster-url').val(),
             filmmaker_name: $('#fd-filmmaker-name').val(),
-            filmmaker_email: $('#fd-filmmaker-email').val()
+            filmmaker_email: $('#fd-filmmaker-email').val(),
+            return_url: window.location.href.split('?')[0]
         };
         
-        // Send AJAX request
+        // Create Stripe checkout session
         $.ajax({
             url: frontdoorAjax.ajaxurl,
             type: 'POST',
             data: formData,
             success: function(response) {
-                if (response.success) {
-                    // Show success message
-                    $('#frontdoor-submitted-email').text(response.data.email);
-                    $('#frontdoor-success').show();
-                    $form.hide();
-                    
-                    // Scroll to success message
-                    $('html, body').animate({
-                        scrollTop: $('#frontdoor-success').offset().top - 100
-                    }, 500);
+                if (response.success && response.data.checkout_url) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = response.data.checkout_url;
                 } else {
-                    // Show error message - handle various response formats
-                    var errorMsg = 'Submission failed. Please try again.';
-                    if (response.data) {
-                        if (typeof response.data === 'string') {
-                            errorMsg = response.data;
-                        } else if (response.data.message) {
-                            errorMsg = response.data.message;
-                        } else if (response.data.detail) {
-                            errorMsg = response.data.detail;
-                        }
-                    }
+                    // Show error message
+                    var errorMsg = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Could not create payment session. Please try again.';
                     $('#frontdoor-error-text').text(errorMsg);
                     $('#frontdoor-error').show();
                     
-                    // Scroll to error message
-                    $('html, body').animate({
-                        scrollTop: $('#frontdoor-error').offset().top - 100
-                    }, 500);
+                    // Re-enable button
+                    $btn.prop('disabled', false);
+                    $btnText.show();
+                    $btnLoading.hide();
                 }
             },
             error: function(xhr, status, error) {
                 var errorMsg = 'Network error. Please check your connection and try again.';
                 try {
                     var resp = JSON.parse(xhr.responseText);
-                    if (resp.detail) errorMsg = resp.detail;
-                    else if (resp.message) errorMsg = resp.message;
+                    if (resp.data && resp.data.message) errorMsg = resp.data.message;
                 } catch(e) {}
                 $('#frontdoor-error-text').text(errorMsg);
                 $('#frontdoor-error').show();
-            },
-            complete: function() {
+                
                 // Re-enable button
                 $btn.prop('disabled', false);
                 $btnText.show();
@@ -105,7 +152,7 @@
         e.preventDefault();
         
         var $form = $(this);
-        var $btn = $form.find('.frontdoor-submit-btn');
+        var $btn = $form.find('.frontdoor-portal-btn');
         var $btnText = $btn.find('.btn-text');
         var $btnLoading = $btn.find('.btn-loading');
         var $results = $('#frontdoor-portal-results');
@@ -131,7 +178,7 @@
                     renderPortalResults(response.data, email);
                     $results.show();
                 } else {
-                    $results.html('<div class="frontdoor-error"><p>' + response.data.message + '</p></div>').show();
+                    $results.html('<div class="frontdoor-error"><p>' + (response.data.message || 'Error looking up submissions.') + '</p></div>').show();
                 }
             },
             error: function() {
@@ -153,7 +200,7 @@
             $results.html(
                 '<div class="frontdoor-no-results">' +
                     '<p>No submissions found for <strong>' + escapeHtml(email) + '</strong></p>' +
-                    '<p><a href="/submit-film">Submit your first film →</a></p>' +
+                    '<p><a href="/front-door-submission-form/">Submit your first film &rarr;</a></p>' +
                 '</div>'
             );
             return;
@@ -213,7 +260,7 @@
 
     function qaCheckItem(label, passed) {
         var className = passed ? 'passed' : 'failed';
-        var icon = passed ? '✓' : '✗';
+        var icon = passed ? '&#10003;' : '&#10007;';
         return '<span class="frontdoor-qa-check ' + className + '">' + icon + ' ' + label + '</span>';
     }
 
@@ -238,3 +285,70 @@
     }
 
 })(jQuery);
+
+/**
+ * Process payment after returning from Stripe
+ */
+function frontdoorProcessPayment(sessionId) {
+    jQuery(function($) {
+        var maxAttempts = 10;
+        var attemptCount = 0;
+        var pollInterval = 2000; // 2 seconds
+        
+        function checkPaymentAndSubmit() {
+            attemptCount++;
+            
+            $.ajax({
+                url: frontdoorAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'frontdoor_process_payment',
+                    nonce: frontdoorAjax.nonce,
+                    session_id: sessionId
+                },
+                success: function(response) {
+                    $('#frontdoor-processing').hide();
+                    
+                    if (response.success) {
+                        // Show success message
+                        $('#frontdoor-submitted-email').text(response.data.email || '');
+                        $('#frontdoor-success').show();
+                        
+                        // Clean up URL
+                        if (window.history && window.history.replaceState) {
+                            var cleanUrl = window.location.href.split('?')[0];
+                            window.history.replaceState({}, document.title, cleanUrl);
+                        }
+                    } else {
+                        // Check if we should retry (payment might still be processing)
+                        if (attemptCount < maxAttempts && response.data && response.data.message && 
+                            response.data.message.indexOf('not completed') !== -1) {
+                            $('#frontdoor-processing').show();
+                            setTimeout(checkPaymentAndSubmit, pollInterval);
+                        } else {
+                            // Show error
+                            var errorMsg = response.data && response.data.message 
+                                ? response.data.message 
+                                : 'Payment processing failed.';
+                            $('#frontdoor-error-text').text(errorMsg);
+                            $('#frontdoor-error').show();
+                        }
+                    }
+                },
+                error: function() {
+                    // Retry on network error
+                    if (attemptCount < maxAttempts) {
+                        setTimeout(checkPaymentAndSubmit, pollInterval);
+                    } else {
+                        $('#frontdoor-processing').hide();
+                        $('#frontdoor-error-text').text('Network error while processing payment. Please contact support.');
+                        $('#frontdoor-error').show();
+                    }
+                }
+            });
+        }
+        
+        // Start polling
+        checkPaymentAndSubmit();
+    });
+}
