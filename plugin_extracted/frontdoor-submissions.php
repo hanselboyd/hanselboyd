@@ -606,12 +606,12 @@ function frontdoor_admin_page() {
                 <h2>Publish to Shelf</h2>
                 <p>Select which shelf to publish this film to:</p>
                 <select id="frontdoor-shelf-select" class="widefat">
-                    <option value="Now Programming">Now Programming</option>
-                    <option value="Premieres">Premieres</option>
-                    <option value="Concept Cinema">Concept Cinema</option>
-                    <option value="AI Nonfiction">AI Nonfiction</option>
-                    <option value="Spotlight">Spotlight</option>
-                    <option value="Archive">Archive</option>
+                    <option value="Neural Broadcast">Neural Broadcast</option>
+                    <option value="Synthetic Stories">Synthetic Stories</option>
+                    <option value="Machine Dreams">Machine Dreams</option>
+                    <option value="First Broadcast">First Broadcast</option>
+                    <option value="Extended Transmission">Extended Transmission</option>
+                    <option value="The Lab">The Lab</option>
                 </select>
                 <div style="margin-top: 20px; text-align: right;">
                     <button class="button" id="frontdoor-cancel-publish">Cancel</button>
