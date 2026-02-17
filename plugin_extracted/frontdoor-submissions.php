@@ -438,7 +438,7 @@ function frontdoor_process_payment() {
     $stripe_keys = frontdoor_get_stripe_keys();
     
     // Retrieve the Stripe session to verify payment and get metadata
-    $response = wp_remote_get('https://api.stripe.com/v1/checkout/sessions/' . $session_id, array(
+    $response = wp_remote_get('https://api.stripe.com/v1/checkout/sessions/' . $session_id . '?expand[]=metadata', array(
         'headers' => array(
             'Authorization' => 'Basic ' . base64_encode($stripe_keys['secret'] . ':')
         ),
@@ -446,7 +446,7 @@ function frontdoor_process_payment() {
     ));
     
     if (is_wp_error($response)) {
-        wp_send_json_error(array('message' => 'Could not verify payment.'));
+        wp_send_json_error(array('message' => 'Could not verify payment. Please contact support.'));
         return;
     }
     
@@ -457,12 +457,38 @@ function frontdoor_process_payment() {
         return;
     }
     
-    // Get submission data from transient
+    // Get submission data from WordPress options (primary) or transient (backup)
     $submission_key = isset($session['metadata']['submission_key']) ? $session['metadata']['submission_key'] : '';
-    $submission_data = get_transient($submission_key);
+    $submission_data = get_option($submission_key);
     
     if (!$submission_data) {
-        wp_send_json_error(array('message' => 'Submission data expired. Please resubmit the form.'));
+        // Try transient as backup
+        $submission_data = get_transient($submission_key);
+    }
+    
+    if (!$submission_data) {
+        // Last resort: reconstruct from Stripe metadata
+        if (isset($session['metadata']['film_title']) && isset($session['metadata']['filmmaker_email'])) {
+            wp_send_json_error(array(
+                'message' => 'Payment received, but we couldn\'t finalize your submission (server error). Please contact support with your film title and email.',
+                'film_title' => $session['metadata']['film_title'],
+                'email' => $session['metadata']['filmmaker_email'],
+                'session_id' => $session_id
+            ));
+        } else {
+            wp_send_json_error(array('message' => 'Submission data not found. Please contact support with session ID: ' . $session_id));
+        }
+        return;
+    }
+    
+    // Check if already processed (prevent double submissions)
+    $processed_key = 'fd_processed_' . $session_id;
+    if (get_option($processed_key)) {
+        // Already processed - return success
+        wp_send_json_success(array(
+            'message' => 'Submission already processed!',
+            'email' => $submission_data['filmmaker_email']
+        ));
         return;
     }
     
