@@ -31,6 +31,82 @@
     margin: 0 auto;
 }
 
+.frontdoor-portal-link {
+    margin-top: 15px;
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.frontdoor-portal-link a {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.frontdoor-portal-link a:hover {
+    text-decoration: underline;
+}
+
+/* Progress Steps */
+.frontdoor-progress {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding: 20px 0;
+}
+
+.frontdoor-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.frontdoor-step .step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.frontdoor-step.active .step-number {
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    color: #ffffff;
+}
+
+.frontdoor-step.completed .step-number {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.frontdoor-step.active .step-label {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.frontdoor-step.completed .step-label {
+    color: #10b981;
+}
+
+@media (max-width: 500px) {
+    .frontdoor-progress {
+        gap: 20px;
+    }
+    
+    .frontdoor-step .step-label {
+        display: none;
+    }
+}
+
 /* Form Sections */
 .frontdoor-form-section {
     background: #ffffff;
