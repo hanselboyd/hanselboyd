@@ -298,6 +298,160 @@
     transform: none;
 }
 
+/* Pay Button */
+.frontdoor-pay-btn {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.frontdoor-pay-btn:hover {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.frontdoor-secure-note {
+    margin-top: 15px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Back Button */
+.frontdoor-back-btn {
+    background: none;
+    border: none;
+    color: #8b5cf6;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 20px;
+    transition: color 0.2s ease;
+}
+
+.frontdoor-back-btn:hover {
+    color: #7c3aed;
+}
+
+/* Payment Summary */
+.frontdoor-payment-summary {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 15px;
+}
+
+.frontdoor-payment-summary h4 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    margin: 0 0 15px 0;
+}
+
+.frontdoor-film-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 15px 0;
+}
+
+.frontdoor-summary-details {
+    margin-bottom: 20px;
+}
+
+.frontdoor-summary-details p {
+    margin: 5px 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.frontdoor-summary-details span {
+    color: #1e293b;
+}
+
+.frontdoor-fee-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.fee-label {
+    font-size: 1rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.fee-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Secondary Button */
+.frontdoor-btn-secondary {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #8b5cf6;
+    background: #ffffff;
+    border: 2px solid #8b5cf6;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+}
+
+.frontdoor-btn-secondary:hover {
+    background: #8b5cf6;
+    color: #ffffff;
+}
+
+/* Invalid field */
+.frontdoor-invalid {
+    border-color: #ef4444 !important;
+    background: #fef2f2 !important;
+}
+
+/* Warning message */
+.frontdoor-warning {
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+    border: 2px solid #f59e0b;
+}
+
+.frontdoor-warning .frontdoor-message-icon {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.frontdoor-warning h3 {
+    color: #92400e;
+}
+
+/* Processing state */
+.frontdoor-processing {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #3b82f6;
+}
+
+.frontdoor-processing h3 {
+    color: #1e40af;
+}
+
+.frontdoor-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(59, 130, 246, 0.2);
+    border-radius: 50%;
+    border-top-color: #3b82f6;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
 /* Spinner */
 .spinner {
     display: inline-block;
