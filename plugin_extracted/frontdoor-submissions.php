@@ -15,8 +15,10 @@ if (!defined('ABSPATH')) {
 
 // Define plugin constants
 define('FRONTDOOR_API_URL', 'https://frontdoor-api-npz4.onrender.com');
-define('FRONTDOOR_VERSION', '2.0.0');
+define('FRONTDOOR_VERSION', '2.1.0');
 define('FRONTDOOR_SUBMISSION_FEE', 25.00); // Submission fee in USD
+define('FRONTDOOR_FROM_EMAIL', 'submissions@frontdoormedia.org'); // SendGrid verified sender
+define('FRONTDOOR_FROM_NAME', 'Front Door Media');
 
 /**
  * Get Stripe keys from wp-config.php or options
@@ -26,6 +28,190 @@ function frontdoor_get_stripe_keys() {
         'publishable' => defined('FRONTDOOR_STRIPE_PUBLISHABLE_KEY') ? FRONTDOOR_STRIPE_PUBLISHABLE_KEY : get_option('frontdoor_stripe_publishable_key', ''),
         'secret' => defined('FRONTDOOR_STRIPE_SECRET_KEY') ? FRONTDOOR_STRIPE_SECRET_KEY : get_option('frontdoor_stripe_secret_key', '')
     );
+}
+
+/**
+ * Get SendGrid API key
+ */
+function frontdoor_get_sendgrid_key() {
+    return defined('FRONTDOOR_SENDGRID_API_KEY') ? FRONTDOOR_SENDGRID_API_KEY : get_option('frontdoor_sendgrid_api_key', '');
+}
+
+/**
+ * Send email via SendGrid
+ */
+function frontdoor_send_email($to_email, $to_name, $subject, $html_content) {
+    $api_key = frontdoor_get_sendgrid_key();
+    
+    if (empty($api_key)) {
+        error_log('Front Door: SendGrid API key not configured');
+        return false;
+    }
+    
+    $from_email = defined('FRONTDOOR_FROM_EMAIL') ? FRONTDOOR_FROM_EMAIL : 'submissions@frontdoormedia.org';
+    $from_name = defined('FRONTDOOR_FROM_NAME') ? FRONTDOOR_FROM_NAME : 'Front Door Media';
+    
+    $data = array(
+        'personalizations' => array(
+            array(
+                'to' => array(
+                    array(
+                        'email' => $to_email,
+                        'name' => $to_name
+                    )
+                ),
+                'subject' => $subject
+            )
+        ),
+        'from' => array(
+            'email' => $from_email,
+            'name' => $from_name
+        ),
+        'content' => array(
+            array(
+                'type' => 'text/html',
+                'value' => $html_content
+            )
+        )
+    );
+    
+    $response = wp_remote_post('https://api.sendgrid.com/v3/mail/send', array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $api_key,
+            'Content-Type' => 'application/json'
+        ),
+        'body' => json_encode($data),
+        'timeout' => 30
+    ));
+    
+    if (is_wp_error($response)) {
+        error_log('Front Door SendGrid Error: ' . $response->get_error_message());
+        return false;
+    }
+    
+    $status_code = wp_remote_retrieve_response_code($response);
+    
+    if ($status_code >= 200 && $status_code < 300) {
+        return true;
+    } else {
+        error_log('Front Door SendGrid Error: HTTP ' . $status_code . ' - ' . wp_remote_retrieve_body($response));
+        return false;
+    }
+}
+
+/**
+ * Send submission confirmation email
+ */
+function frontdoor_send_confirmation_email($submission_data, $submission_id = '') {
+    $filmmaker_email = $submission_data['filmmaker_email'];
+    $filmmaker_name = $submission_data['filmmaker_name'];
+    $film_title = $submission_data['title'];
+    $payment_amount = isset($submission_data['payment_amount']) ? $submission_data['payment_amount'] : FRONTDOOR_SUBMISSION_FEE;
+    
+    $subject = "Submission Received: {$film_title}";
+    
+    $portal_url = home_url('/filmmaker-portal/?email=' . urlencode($filmmaker_email));
+    
+    $html_content = '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%); padding: 40px 30px; text-align: center;">
+                                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Front Door Media</h1>
+                                <p style="color: #c4b5fd; margin: 10px 0 0 0; font-size: 16px;">Film Submission Confirmed</p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Success Icon -->
+                        <tr>
+                            <td style="padding: 40px 30px 20px; text-align: center;">
+                                <div style="width: 70px; height: 70px; background-color: #10b981; border-radius: 50%; display: inline-block; line-height: 70px;">
+                                    <span style="color: #ffffff; font-size: 36px;">&#10003;</span>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Main Content -->
+                        <tr>
+                            <td style="padding: 0 30px 30px;">
+                                <h2 style="color: #1e293b; margin: 0 0 20px; font-size: 22px; text-align: center;">Thank you, ' . esc_html($filmmaker_name) . '!</h2>
+                                <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin: 0 0 25px; text-align: center;">
+                                    We\'ve received your film submission and payment. Our automated QA system is now reviewing your submission.
+                                </p>
+                                
+                                <!-- Film Details Box -->
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 8px; margin-bottom: 25px;">
+                                    <tr>
+                                        <td style="padding: 25px;">
+                                            <h3 style="color: #1e293b; margin: 0 0 15px; font-size: 18px;">' . esc_html($film_title) . '</h3>
+                                            <table width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="color: #64748b; font-size: 14px; padding: 5px 0;">Genre:</td>
+                                                    <td style="color: #1e293b; font-size: 14px; padding: 5px 0; text-align: right;">' . esc_html($submission_data['genre'] ?? 'Not specified') . '</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="color: #64748b; font-size: 14px; padding: 5px 0;">Submission Fee:</td>
+                                                    <td style="color: #1e293b; font-size: 14px; padding: 5px 0; text-align: right;">$' . number_format($payment_amount, 2) . ' USD</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="color: #64748b; font-size: 14px; padding: 5px 0;">Status:</td>
+                                                    <td style="padding: 5px 0; text-align: right;">
+                                                        <span style="background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">QA In Progress</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- What\'s Next -->
+                                <h3 style="color: #1e293b; margin: 0 0 15px; font-size: 16px;">What happens next?</h3>
+                                <ol style="color: #64748b; font-size: 14px; line-height: 1.8; margin: 0 0 25px; padding-left: 20px;">
+                                    <li><strong>QA Review</strong> - Our system checks video quality, audio, and technical specs (24-48 hours)</li>
+                                    <li><strong>Curatorial Review</strong> - Our team reviews your film for our platform</li>
+                                    <li><strong>Publication</strong> - Approved films are published to our Roku channel</li>
+                                </ol>
+                                
+                                <!-- CTA Button -->
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td align="center" style="padding: 10px 0 20px;">
+                                            <a href="' . esc_url($portal_url) . '" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 50px; font-size: 16px; font-weight: 600;">Track Your Submission</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f8fafc; padding: 25px 30px; border-top: 1px solid #e2e8f0;">
+                                <p style="color: #94a3b8; font-size: 13px; margin: 0; text-align: center;">
+                                    Questions? Reply to this email or visit <a href="https://frontdoormedia.org" style="color: #8b5cf6;">frontdoormedia.org</a>
+                                </p>
+                                <p style="color: #cbd5e1; font-size: 12px; margin: 15px 0 0; text-align: center;">
+                                    &copy; ' . date('Y') . ' Front Door Media. All rights reserved.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>';
+    
+    return frontdoor_send_email($filmmaker_email, $filmmaker_name, $subject, $html_content);
 }
 
 /**
