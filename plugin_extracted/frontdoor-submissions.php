@@ -353,9 +353,13 @@ function frontdoor_create_checkout_session() {
         return;
     }
     
-    // Store submission data in transient (expires in 1 hour)
-    $submission_key = 'fd_submission_' . wp_generate_password(16, false);
-    set_transient($submission_key, $submission_data, HOUR_IN_SECONDS);
+    // Store submission data in WordPress options (more reliable than transients)
+    // Key it by a unique identifier we'll pass to Stripe
+    $submission_key = 'fd_sub_' . md5($submission_data['filmmaker_email'] . $submission_data['title'] . time());
+    update_option($submission_key, $submission_data, false);
+    
+    // Also store in a session-based transient as backup
+    set_transient($submission_key, $submission_data, 2 * HOUR_IN_SECONDS);
     
     // Build success and cancel URLs
     $current_url = isset($_POST['return_url']) ? esc_url_raw($_POST['return_url']) : home_url('/front-door-submission-form/');
