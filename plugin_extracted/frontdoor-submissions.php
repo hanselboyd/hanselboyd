@@ -707,9 +707,14 @@ function frontdoor_process_payment() {
     if ($response_code === 200 || $response_code === 201) {
         // Mark as processed to prevent duplicates
         update_option($processed_key, true, false);
+        
+        // Send confirmation email via SendGrid
+        $submission_id = isset($response_body['id']) ? $response_body['id'] : '';
+        frontdoor_send_confirmation_email($submission_data, $submission_id);
+        
         wp_send_json_success(array(
             'message' => 'Submission received successfully!',
-            'submission_id' => isset($response_body['id']) ? $response_body['id'] : '',
+            'submission_id' => $submission_id,
             'email' => $submission_data['filmmaker_email']
         ));
     } else {
