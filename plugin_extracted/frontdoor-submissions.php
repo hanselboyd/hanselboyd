@@ -506,8 +506,9 @@ function frontdoor_process_payment() {
         'body' => json_encode($submission_data)
     ));
     
-    // Clean up transient
+    // Clean up stored data
     delete_transient($submission_key);
+    delete_option($submission_key);
     
     if (is_wp_error($api_response)) {
         wp_send_json_error(array('message' => 'Submission failed. Please contact support with session ID: ' . $session_id));
@@ -518,6 +519,8 @@ function frontdoor_process_payment() {
     $response_body = json_decode(wp_remote_retrieve_body($api_response), true);
     
     if ($response_code === 200 || $response_code === 201) {
+        // Mark as processed to prevent duplicates
+        update_option($processed_key, true, false);
         wp_send_json_success(array(
             'message' => 'Submission received successfully!',
             'submission_id' => isset($response_body['id']) ? $response_body['id'] : '',
