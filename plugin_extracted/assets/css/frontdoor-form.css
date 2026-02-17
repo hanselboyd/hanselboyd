@@ -1,0 +1,836 @@
+/* Front Door Film Submissions - Form Styles */
+
+.frontdoor-submission-wrapper,
+.frontdoor-portal-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+.frontdoor-form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.frontdoor-form-header h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.frontdoor-subtitle {
+    font-size: 1.1rem;
+    color: #64748b;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Form Sections */
+.frontdoor-form-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.frontdoor-form-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+/* Form Fields */
+.frontdoor-field {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.frontdoor-field:last-child {
+    margin-bottom: 0;
+}
+
+.frontdoor-field label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.frontdoor-field .required {
+    color: #ef4444;
+}
+
+.frontdoor-field input[type="text"],
+.frontdoor-field input[type="email"],
+.frontdoor-field input[type="url"],
+.frontdoor-field input[type="number"],
+.frontdoor-field select,
+.frontdoor-field textarea {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.frontdoor-field input:focus,
+.frontdoor-field select:focus,
+.frontdoor-field textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.frontdoor-field input::placeholder,
+.frontdoor-field textarea::placeholder {
+    color: #94a3b8;
+}
+
+.frontdoor-field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.frontdoor-field select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+}
+
+/* Field Row (side by side) */
+.frontdoor-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .frontdoor-field-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Help Text */
+.frontdoor-help {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 6px;
+}
+
+/* Character Count */
+.frontdoor-char-count {
+    position: absolute;
+    right: 10px;
+    bottom: -18px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Checkbox */
+.frontdoor-checkbox label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.frontdoor-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: #8b5cf6;
+    flex-shrink: 0;
+}
+
+.frontdoor-checkbox span {
+    color: #475569;
+    line-height: 1.5;
+}
+
+.frontdoor-checkbox a {
+    color: #8b5cf6;
+    text-decoration: none;
+}
+
+.frontdoor-checkbox a:hover {
+    text-decoration: underline;
+}
+
+/* Terms Section */
+.frontdoor-terms {
+    background: #fefce8;
+    border-color: #fef08a;
+}
+
+/* Submit Button */
+.frontdoor-form-actions {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.frontdoor-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.frontdoor-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.frontdoor-submit-btn:active {
+    transform: translateY(0);
+}
+
+.frontdoor-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Spinner */
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Messages */
+.frontdoor-message {
+    text-align: center;
+    padding: 40px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.frontdoor-success {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+}
+
+.frontdoor-error {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #ef4444;
+}
+
+.frontdoor-message-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 15px;
+}
+
+.frontdoor-success .frontdoor-message-icon {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.frontdoor-error .frontdoor-message-icon {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.frontdoor-message h3 {
+    font-size: 1.5rem;
+    margin: 0 0 10px;
+}
+
+.frontdoor-success h3 {
+    color: #065f46;
+}
+
+.frontdoor-error h3 {
+    color: #991b1b;
+}
+
+.frontdoor-message p {
+    color: #374151;
+    margin: 10px 0;
+}
+
+.frontdoor-tracking {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.frontdoor-tracking a {
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+/* Guidelines */
+.frontdoor-guidelines {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.frontdoor-guidelines h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 15px;
+}
+
+.frontdoor-guidelines ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.frontdoor-guidelines li {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.frontdoor-guidelines li strong {
+    color: #475569;
+}
+
+/* ==================== DARK PORTAL STYLES ==================== */
+
+.frontdoor-portal-dark {
+    max-width: 100%;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #f8fafc;
+}
+
+.frontdoor-portal-header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    padding: 60px 30px;
+    text-align: center;
+}
+
+.frontdoor-portal-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.frontdoor-portal-header h2 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #c4b5fd;
+    margin: 8px 0 0 0;
+}
+
+.frontdoor-portal-header p {
+    font-size: 1rem;
+    color: #a5b4fc;
+    margin: 15px 0 0 0;
+}
+
+.frontdoor-portal-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 30px;
+}
+
+.frontdoor-portal-form-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+}
+
+.frontdoor-portal-form-label {
+    color: #64748b;
+    margin: 0 0 15px 0;
+    font-size: 0.95rem;
+}
+
+.frontdoor-portal-form-inline {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.frontdoor-portal-form-inline input[type="email"] {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.frontdoor-portal-form-inline input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.frontdoor-portal-btn {
+    padding: 16px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.frontdoor-portal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.frontdoor-portal-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Portal Info Section */
+.frontdoor-portal-info {
+    text-align: center;
+    padding: 50px 30px;
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 40px;
+}
+
+.frontdoor-portal-info-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.frontdoor-portal-info h3 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin: 0 0 15px 0;
+}
+
+.frontdoor-portal-info p {
+    color: #64748b;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Portal FAQ */
+.frontdoor-portal-faq {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+}
+
+.frontdoor-portal-faq h3 {
+    font-size: 1.2rem;
+    color: #1e293b;
+    margin: 0 0 25px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.frontdoor-faq-item {
+    margin-bottom: 20px;
+}
+
+.frontdoor-faq-item:last-child {
+    margin-bottom: 0;
+}
+
+.frontdoor-faq-item h4 {
+    font-size: 1rem;
+    color: #334155;
+    margin: 0 0 8px 0;
+}
+
+.frontdoor-faq-item p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Portal Results - Dark Theme */
+.frontdoor-portal-dark .frontdoor-portal-results {
+    margin-top: 0;
+}
+
+.frontdoor-portal-dark .frontdoor-portal-results h3 {
+    font-size: 1.2rem;
+    color: #1e293b;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+    .frontdoor-portal-header {
+        padding: 40px 20px;
+    }
+    
+    .frontdoor-portal-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .frontdoor-portal-form-inline {
+        flex-direction: column;
+    }
+    
+    .frontdoor-portal-btn {
+        width: 100%;
+    }
+}
+
+/* Portal Results */
+.frontdoor-portal-results {
+    margin-top: 30px;
+}
+
+.frontdoor-portal-results h3 {
+    font-size: 1.2rem;
+    color: #334155;
+    margin-bottom: 20px;
+}
+
+.frontdoor-submission-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.frontdoor-submission-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.frontdoor-submission-card h4 {
+    font-size: 1.1rem;
+    color: #1e293b;
+    margin: 0 0 10px;
+}
+
+.frontdoor-submission-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.frontdoor-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.frontdoor-status-pending { background: #fef3c7; color: #92400e; }
+.frontdoor-status-qa_processing { background: #dbeafe; color: #1e40af; }
+.frontdoor-status-qa_passed { background: #d1fae5; color: #065f46; }
+.frontdoor-status-qa_failed { background: #fee2e2; color: #991b1b; }
+.frontdoor-status-classified { background: #e0e7ff; color: #3730a3; }
+.frontdoor-status-published { background: #d1fae5; color: #065f46; }
+.frontdoor-status-rejected { background: #f3f4f6; color: #6b7280; }
+
+.frontdoor-qa-summary {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.frontdoor-qa-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.frontdoor-qa-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.frontdoor-qa-check.passed { color: #059669; }
+.frontdoor-qa-check.failed { color: #dc2626; }
+
+.frontdoor-no-results {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+.frontdoor-no-results p {
+    margin-bottom: 15px;
+}
+
+.frontdoor-no-results a {
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+
+/* ==================== ANALYTICS SHORTCODE ==================== */
+
+.frontdoor-analytics-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+.frontdoor-analytics {
+    max-width: 100%;
+}
+
+.frontdoor-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.frontdoor-analytics-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.frontdoor-analytics-card.success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+}
+
+.frontdoor-analytics-card.info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.frontdoor-analytics-card.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+}
+
+.analytics-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.analytics-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.analytics-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+.frontdoor-analytics-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.frontdoor-analytics-section h3 {
+    margin: 0 0 20px;
+    color: #334155;
+    font-size: 1.1rem;
+}
+
+.frontdoor-pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    padding: 20px 0;
+}
+
+.pipeline-stage {
+    text-align: center;
+    flex: 1;
+    max-width: 150px;
+}
+
+.pipeline-count {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.pipeline-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 5px 0;
+}
+
+.pipeline-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 10px;
+}
+
+.pipeline-arrow {
+    font-size: 1.5rem;
+    color: #cbd5e1;
+}
+
+.frontdoor-status-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-dot.pending { background: #f59e0b; }
+.status-dot.processing { background: #3b82f6; }
+.status-dot.passed { background: #10b981; }
+.status-dot.failed { background: #ef4444; }
+.status-dot.classified { background: #8b5cf6; }
+.status-dot.published { background: #059669; }
+.status-dot.rejected { background: #6b7280; }
+
+.status-name {
+    flex: 1;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.status-count {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.frontdoor-shelf-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.shelf-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.shelf-name {
+    width: 280px;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.shelf-bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shelf-bar {
+    height: 24px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    border-radius: 4px;
+    min-width: 4px;
+    transition: width 0.5s ease;
+}
+
+.shelf-count {
+    font-weight: 700;
+    color: #1e293b;
+    min-width: 30px;
+}
+
+@media (max-width: 768px) {
+    .frontdoor-pipeline {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pipeline-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .shelf-name {
+        width: 150px;
+        font-size: 0.8rem;
+    }
+}
