@@ -347,6 +347,10 @@ function frontdoor_analytics_shortcode($atts) {
     $qa_passed = $stats['by_status']['qa_passed'] ?? 0;
     $classified = $stats['by_status']['classified'] ?? 0;
     
+    // Use configured shelves
+    $configured_shelves = frontdoor_get_shelves();
+    $api_shelf_data = $stats['by_shelf'] ?? array();
+    
     ob_start();
     ?>
     <div class="frontdoor-analytics-wrapper">
@@ -358,14 +362,20 @@ function frontdoor_analytics_shortcode($atts) {
                 <div class="frontdoor-analytics-card info"><div class="analytics-icon">&#128200;</div><div class="analytics-value"><?php echo $total > 0 ? round(($published/$total)*100) : 0; ?>%</div><div class="analytics-label">Publish Rate</div></div>
                 <div class="frontdoor-analytics-card warning"><div class="analytics-icon">&#128269;</div><div class="analytics-value"><?php echo $qa_passed + $classified; ?></div><div class="analytics-label">Ready for Review</div></div>
             </div>
-            <?php if (!empty($stats['by_shelf'])): ?>
             <div class="frontdoor-analytics-section">
                 <h3>Published by Shelf</h3>
                 <div class="frontdoor-shelf-stats">
                     <?php 
-                    $max = max(array_values($stats['by_shelf']) ?: array(1));
-                    foreach ($stats['by_shelf'] as $shelf => $count): 
-                        $pct = $max > 0 ? ($count / $max) * 100 : 0;
+                    // Build shelf counts using configured shelves
+                    $shelf_counts = array();
+                    foreach ($configured_shelves as $shelf) {
+                        $shelf_counts[$shelf] = isset($api_shelf_data[$shelf]) ? $api_shelf_data[$shelf] : 0;
+                    }
+                    $max = max(array_values($shelf_counts) ?: array(1));
+                    if ($max == 0) $max = 1;
+                    
+                    foreach ($shelf_counts as $shelf => $count): 
+                        $pct = ($count / $max) * 100;
                     ?>
                     <div class="shelf-stat-item">
                         <div class="shelf-name"><?php echo esc_html($shelf); ?></div>
@@ -374,7 +384,6 @@ function frontdoor_analytics_shortcode($atts) {
                     <?php endforeach; ?>
                 </div>
             </div>
-            <?php endif; ?>
         </div>
     </div>
     <?php
