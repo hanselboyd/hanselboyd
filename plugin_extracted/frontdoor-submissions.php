@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('FRONTDOOR_API_URL', 'https://frontdoor-api-npz4.onrender.com');
 define('FRONTDOOR_VERSION', '2.1.0');
-define('FRONTDOOR_FROM_EMAIL', 'submissions@frontdoormedia.org');
+define('FRONTDOOR_FROM_EMAIL', 'submission@frontdoormedia.org');
 define('FRONTDOOR_FROM_NAME', 'Front Door Media');
 
 /**
