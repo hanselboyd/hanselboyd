@@ -23,9 +23,6 @@ load_dotenv()
 # Initialize FastAPI
 app = FastAPI(title="Front Door Media - The AI Cinema Network", version="1.0.0")
 
-# Initialize scheduler for Tuesday digest emails
-scheduler = BackgroundScheduler()
-
 # CORS
 app.add_middleware(
     CORSMiddleware,
