@@ -12,22 +12,16 @@ from datetime import datetime, timezone, timedelta
 from enum import Enum
 import os
 import json
-import asyncio
 import subprocess
 import re
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson import ObjectId
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 load_dotenv()
 
 # Initialize FastAPI
 app = FastAPI(title="Front Door Media - The AI Cinema Network", version="1.0.0")
-
-# Initialize scheduler for Tuesday digest emails
-scheduler = BackgroundScheduler()
 
 # CORS
 app.add_middleware(
