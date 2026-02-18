@@ -990,10 +990,34 @@ function frontdoor_settings_page() {
     if (isset($_POST['frontdoor_save_settings']) && wp_verify_nonce($_POST['frontdoor_settings_nonce'], 'frontdoor_save_settings')) {
         update_option('frontdoor_stripe_publishable_key', sanitize_text_field($_POST['stripe_publishable_key']));
         update_option('frontdoor_stripe_secret_key', sanitize_text_field($_POST['stripe_secret_key']));
+        update_option('frontdoor_sendgrid_api_key', sanitize_text_field($_POST['sendgrid_api_key']));
         echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
     }
     
+    // Test SendGrid
+    if (isset($_POST['frontdoor_test_email']) && wp_verify_nonce($_POST['frontdoor_settings_nonce'], 'frontdoor_save_settings')) {
+        $test_email = sanitize_email($_POST['test_email_address']);
+        if (is_email($test_email)) {
+            $test_data = array(
+                'title' => 'Test Film Submission',
+                'filmmaker_name' => 'Test User',
+                'filmmaker_email' => $test_email,
+                'genre' => 'Test',
+                'payment_amount' => FRONTDOOR_SUBMISSION_FEE
+            );
+            $result = frontdoor_send_confirmation_email($test_data, 'test-123');
+            if ($result) {
+                echo '<div class="notice notice-success"><p>Test email sent successfully to ' . esc_html($test_email) . '!</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>Failed to send test email. Check your SendGrid API key and sender verification.</p></div>';
+            }
+        } else {
+            echo '<div class="notice notice-error"><p>Please enter a valid email address for testing.</p></div>';
+        }
+    }
+    
     $stripe_keys = frontdoor_get_stripe_keys();
+    $sendgrid_key = frontdoor_get_sendgrid_key();
     ?>
     <div class="wrap">
         <h1>Front Door Settings</h1>
@@ -1021,6 +1045,26 @@ function frontdoor_settings_page() {
                 </tr>
             </table>
             
+            <h2>SendGrid Email Configuration</h2>
+            <p>Enter your SendGrid API key for sending confirmation emails. Get one at <a href="https://app.sendgrid.com/settings/api_keys" target="_blank">SendGrid Dashboard</a>.</p>
+            
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="sendgrid_api_key">SendGrid API Key</label></th>
+                    <td>
+                        <input type="password" name="sendgrid_api_key" id="sendgrid_api_key" class="regular-text" value="<?php echo esc_attr($sendgrid_key); ?>" placeholder="SG.xxxxx..." />
+                        <p class="description">Starts with SG. Requires Mail Send permission.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Sender Email</th>
+                    <td>
+                        <code><?php echo esc_html(FRONTDOOR_FROM_EMAIL); ?></code>
+                        <p class="description">This must be verified in your SendGrid account. To change, edit FRONTDOOR_FROM_EMAIL in the plugin.</p>
+                    </td>
+                </tr>
+            </table>
+            
             <h2>Submission Fee</h2>
             <p>Current submission fee: <strong>$<?php echo number_format(FRONTDOOR_SUBMISSION_FEE, 2); ?> USD</strong></p>
             <p class="description">To change the fee, edit the FRONTDOOR_SUBMISSION_FEE constant in the plugin file.</p>
@@ -1032,11 +1076,29 @@ function frontdoor_settings_page() {
         
         <hr>
         
+        <h2>Test Email</h2>
+        <p>Send a test confirmation email to verify your SendGrid configuration.</p>
+        <form method="post">
+            <?php wp_nonce_field('frontdoor_save_settings', 'frontdoor_settings_nonce'); ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="test_email_address">Test Email Address</label></th>
+                    <td>
+                        <input type="email" name="test_email_address" id="test_email_address" class="regular-text" placeholder="your@email.com" />
+                        <input type="submit" name="frontdoor_test_email" class="button" value="Send Test Email" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+        
+        <hr>
+        
         <h2>Alternative: wp-config.php Configuration</h2>
-        <p>You can also define Stripe keys in your wp-config.php file (recommended for security):</p>
+        <p>You can also define keys in your wp-config.php file (recommended for security):</p>
         <pre style="background: #f1f1f1; padding: 15px; border-radius: 4px;">
 define('FRONTDOOR_STRIPE_PUBLISHABLE_KEY', 'pk_live_your_key_here');
 define('FRONTDOOR_STRIPE_SECRET_KEY', 'sk_live_your_key_here');
+define('FRONTDOOR_SENDGRID_API_KEY', 'SG.your_key_here');
         </pre>
     </div>
     <?php
