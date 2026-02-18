@@ -494,11 +494,13 @@ function frontdoor_admin_page() {
                     <td><?php echo esc_html($sub['recommended_shelf'] ?? '-'); ?></td>
                     <td><?php echo isset($sub['created_at']) ? date('M j, Y', strtotime($sub['created_at'])) : '-'; ?></td>
                     <td>
-                        <?php if (in_array($sub['status'], array('classified', 'qa_passed'))): ?>
-                            <button class="button button-primary frontdoor-publish-btn" data-id="<?php echo esc_attr($sub['id']); ?>" data-shelf="<?php echo esc_attr($sub['recommended_shelf'] ?? ''); ?>">Publish</button>
-                            <button class="button frontdoor-reject-btn" data-id="<?php echo esc_attr($sub['id']); ?>">Reject</button>
-                        <?php elseif ($sub['status'] === 'published'): ?>
+                        <?php if ($sub['status'] === 'published'): ?>
                             <span style="color:#46b450;">&#10003; Published</span>
+                        <?php elseif ($sub['status'] === 'rejected'): ?>
+                            <span style="color:#999;">Rejected</span>
+                        <?php else: ?>
+                            <button class="button button-primary frontdoor-publish-btn" data-id="<?php echo esc_attr($sub['id']); ?>" data-shelf="<?php echo esc_attr($sub['recommended_shelf'] ?? ''); ?>">Approve & Publish</button>
+                            <button class="button frontdoor-reject-btn" data-id="<?php echo esc_attr($sub['id']); ?>">Reject</button>
                         <?php endif; ?>
                     </td>
                 </tr>
