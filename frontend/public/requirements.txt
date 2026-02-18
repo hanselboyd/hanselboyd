@@ -1,0 +1,9 @@
+fastapi==0.110.1
+uvicorn==0.25.0
+python-dotenv>=1.0.1
+pymongo==4.5.0
+pydantic>=2.6.4
+email-validator>=2.2.0
+requests>=2.31.0
+sendgrid>=6.10.0
+openai>=1.12.0
